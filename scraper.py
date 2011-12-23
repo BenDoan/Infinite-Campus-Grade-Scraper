@@ -1,7 +1,10 @@
 import mechanize
 import cookielib
 import BeautifulSoup as bs
-import reimport datetime
+import re
+import datetime
+
+import config
 
 # Browser
 br = mechanize.Browser()
@@ -31,8 +34,8 @@ br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.
 r = br.open('https://www.campus.mpsomaha.org/campus/portal/millard.jsp?status=portalLogoff&lang=en')
 br.select_form(nr=0)
 
-br.form['username'] = ''
-br.form['password'] = ''
+br.form['username'] = config.username #these need to be set in the config.py file
+br.form['password'] = config.password
 
 br.submit()
 
