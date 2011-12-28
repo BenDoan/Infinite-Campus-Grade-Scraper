@@ -1,10 +1,11 @@
 import mechanize
 import cookielib
-import BeautifulSoup as bs
-import re
 import datetime
 
 import config
+
+now = datetime.datetime.now()
+
 
 # Browser
 br = mechanize.Browser()
@@ -40,13 +41,27 @@ br.form['password'] = config.password
 br.submit()
 
 r = br.open('https://www.campus.mpsomaha.org/campus/portal/main.xsl?lang=en')
-html = r.read()
-print '\n\n\n'
-print html
-
 r = br.open('https://www.campus.mpsomaha.org/campus/portal/portal.xsl?x=portal.PortalOutline&amp;lang=en&amp;mode=notices')
-
 r = br.open('https://www.campus.mpsomaha.org/campus/portal/portal.xsl?x=portal.PortalOutline&lang=en&context=187976-1119-1110&personID=187976&studentFirstName=Benjamin&lastName=Doan&firstName=Benjamin&schoolID=45&calendarID=1119&structureID=1110&calendarName=2011-2012%20Millard%20West%20HS&mode=schedule&x=portal.PortalSchedule&x=resource.PortalOptions')
-html = r.read()
-print '\n\n\n'
-print html
+#html = r.read()
+#print '\n\n\n'
+#print html
+
+
+
+#if now.month < 1 and now.day < 16:
+    #pass
+#else:
+    #pass
+
+r = br.open('https://www.campus.mpsomaha.org/campus/portal/portal.xsl?x=portal.PortalOutline&lang=en&context=187976-1119-1110&mode=classbook&calendarID=1119&structureID=1110&sectionID=514132&personID=187976&trialID=1577&x=portal.PortalClassbook')
+print r.read()
+
+i = 0
+for x in br.links():
+    i += 1
+    print i
+    print type(x)
+    print x
+    print x.base_url + x.url
+    print '\n\n'
