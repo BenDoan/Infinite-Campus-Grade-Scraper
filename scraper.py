@@ -32,23 +32,18 @@ br.set_debug_responses(True)
 # User-Agent (this is cheating, ok?)
 br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
 
-r = br.open('https://www.campus.mpsomaha.org/campus/portal/millard.jsp?status=portalLogoff&lang=en')
-br.select_form(nr=0)
 
-br.form['username'] = config.username #these need to be set in the config.py file
-br.form['password'] = config.password
+
+
+r = br.open('https://www.campus.mpsomaha.org/campus/portal/millard.jsp?status=portalLogoff&lang=en')
+br.select_form(nr=0) #selects the form
+
+br.form['username'] = config.username #adds login info to the form
+br.form['password'] = config.password ##these need to be set in the config.py file
 
 br.submit()
 
-r = br.open('https://www.campus.mpsomaha.org/campus/portal/main.xsl?lang=en')
-r = br.open('https://www.campus.mpsomaha.org/campus/portal/portal.xsl?x=portal.PortalOutline&amp;lang=en&amp;mode=notices')
-r = br.open('https://www.campus.mpsomaha.org/campus/portal/portal.xsl?x=portal.PortalOutline&lang=en&context=187976-1119-1110&personID=187976&studentFirstName=Benjamin&lastName=Doan&firstName=Benjamin&schoolID=45&calendarID=1119&structureID=1110&calendarName=2011-2012%20Millard%20West%20HS&mode=schedule&x=portal.PortalSchedule&x=resource.PortalOptions')
-#html = r.read()
-#print '\n\n\n'
-#print html
-
-
-
+#r = br.open('https://www.campus.mpsomaha.org/campus/portal/portal.xsl?x=portal.PortalOutline&lang=en&context=187976-1119-1110&personID=187976&studentFirstName=Benjamin&lastName=Doan&firstName=Benjamin&schoolID=45&calendarID=1119&structureID=1110&calendarName=2011-2012%20Millard%20West%20HS&mode=schedule&x=portal.PortalSchedule&x=resource.PortalOptions')
 #if now.month < 1 and now.day < 16:
     #pass
 #else:
