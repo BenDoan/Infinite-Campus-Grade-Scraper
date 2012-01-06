@@ -1,6 +1,7 @@
 import mechanize
 import cookielib
 import datetime
+import re
 
 import config
 
@@ -34,7 +35,6 @@ br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.
 
 
 
-
 r = br.open('https://www.campus.mpsomaha.org/campus/portal/millard.jsp?status=portalLogoff&lang=en')
 br.select_form(nr=0) #selects the form
 
@@ -43,20 +43,21 @@ br.form['password'] = config.password ##these need to be set in the config.py fi
 
 br.submit()
 
-#r = br.open('https://www.campus.mpsomaha.org/campus/portal/portal.xsl?x=portal.PortalOutline&lang=en&context=187976-1119-1110&personID=187976&studentFirstName=Benjamin&lastName=Doan&firstName=Benjamin&schoolID=45&calendarID=1119&structureID=1110&calendarName=2011-2012%20Millard%20West%20HS&mode=schedule&x=portal.PortalSchedule&x=resource.PortalOptions')
 #if now.month < 1 and now.day < 16:
     #pass
 #else:
     #pass
 
 r = br.open('https://www.campus.mpsomaha.org/campus/portal/portal.xsl?x=portal.PortalOutline&lang=en&context=187976-1119-1110&mode=classbook&calendarID=1119&structureID=1110&sectionID=514132&personID=187976&trialID=1577&x=portal.PortalClassbook')
-print r.read()
-
+#print r.read()
+match = re.search(r'word:\w\w\w', r)
+print match.group()
 i = 0
 for x in br.links():
     i += 1
     print i
-    print type(x)
-    print x
     print x.base_url + x.url
     print '\n\n'
+
+#response1 = br.follow_link(link=LinkObjectToFollow)
+
