@@ -50,14 +50,19 @@ br.submit()
 
 r = br.open('https://www.campus.mpsomaha.org/campus/portal/portal.xsl?x=portal.PortalOutline&lang=en&context=187976-1119-1110&mode=classbook&calendarID=1119&structureID=1110&sectionID=514132&personID=187976&trialID=1577&x=portal.PortalClassbook')
 #print r.read()
-match = re.search(r'word:\w\w\w', r)
+
+regex_string = '\n'.join(r.readlines())
+print regex_string
+match = re.search(r'\d\d\.\d\d', regex_string)
 print match.group()
-i = 0
-for x in br.links():
-    i += 1
-    print i
-    print x.base_url + x.url
-    print '\n\n'
+
+
+#i = 0
+#for x in br.links():
+    #i += 1
+    #print i
+    #print x.base_url + x.url
+    #print '\n\n'
 
 #response1 = br.follow_link(link=LinkObjectToFollow)
 
