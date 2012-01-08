@@ -5,9 +5,6 @@ import re
 
 import config
 
-now = datetime.datetime.now()
-
-
 # Browser
 br = mechanize.Browser()
 
@@ -35,13 +32,14 @@ br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.
 
 
 
+
+
 r = br.open('https://www.campus.mpsomaha.org/campus/portal/millard.jsp?status=portalLogoff&lang=en')
 br.select_form(nr=0) 
-
 br.form['username'] = config.username 
 br.form['password'] = config.password ##these need to be set in the config.py file
-
 br.submit()
+
 
 r = br.open("https://www.campus.mpsomaha.org/campus/portal/portal.xsl?x=portal.PortalOutline&lang=en&context=187976-1119-1110&personID=187976&studentFirstName=Benjamin&lastName=Doan&firstName=Benjamin&schoolID=45&calendarID=1119&structureID=1110&calendarName=2011-2012%20Millard%20West%20HS&mode=schedule&x=portal.PortalSchedule&x=resource.PortalOptions")
 
