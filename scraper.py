@@ -5,6 +5,20 @@ import re
 
 import config
 
+def regex_search(regex, regex_string):
+    match = re.search(regex, regex_string)
+    return match.group()
+
+def print_alert(text):
+    print "\n\n\n\n"
+    print text
+    print "\n\n\n\n"
+
+def does_nothing(text):
+    pass
+
+
+
 # Browser
 br = mechanize.Browser()
 
@@ -43,28 +57,23 @@ br.submit()
 
 r = br.open("https://www.campus.mpsomaha.org/campus/portal/portal.xsl?x=portal.PortalOutline&lang=en&context=187976-1119-1110&personID=187976&studentFirstName=Benjamin&lastName=Doan&firstName=Benjamin&schoolID=45&calendarID=1119&structureID=1110&calendarName=2011-2012%20Millard%20West%20HS&mode=schedule&x=portal.PortalSchedule&x=resource.PortalOptions")
 
-regex_string = '\n'.join(r.readlines())
-#print regex_string
-
-
 link_list = []
 grade_list = []
 for x in br.links():
     url = x.base_url + x.url
     try:
         match = re.search(r'\.PortalOut', url)
-        print match.group()
+        does_nothing(match.group)
         link_list.append(x)
     except Exception, e:
         pass
 
 for x in link_list:
     r = br.open(x.base_url + x.url)
-
-    #selects the first percetage on the pagee
     regex_string = '\n'.join(r.readlines())
-    match = re.search(r'\d\d\.\d\d', regex_string)
-    grade_list.append(match.group())
+    grade_list.append(regex_search(r'\d\d\.\d\d', regex_string))
+    #selects the first percetage on the pagee
+
 
 print "\n\n\n\n\n\n"
 for x in grade_list:
