@@ -79,8 +79,9 @@ for x in br.links():
 for x in link_list:
     r = br.open(x.base_url + x.url)
     regex_string = '\n'.join(r.readlines())
-    grade = regex_search(r'\d\d\.\d\d', regex_string) #selects the first percetage on the pagee
+    grade = regex_search(r'\d\d\.\d\d', regex_string) #selects the first percetage on the page
     cur_class = 'math' + str(random.randrange(1000))
+    print_alert(regex_string)
 
     grade_dict[cur_class] = grade
 
