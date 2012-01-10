@@ -71,7 +71,7 @@ for x in br.links():
     url = x.base_url + x.url
     try:
         match = re.search(r'\.PortalOut', url)
-        does_nothing(match.group)
+        does_nothing(match.group())
         link_list.append(x)
     except Exception, e:
         pass
@@ -81,9 +81,15 @@ for x in link_list:
     regex_string = '\n'.join(r.readlines())
     grade = regex_search(r'\d\d\.\d\d', regex_string) #selects the first percetage on the page
     cur_class = 'math' + str(random.randrange(1000))
-    print_alert(regex_string)
+    match = regex_search(r'\w\w\w\w\w', regex_string)
+    print match.group()
+
+    print
 
     grade_dict[cur_class] = grade
+
+    #string to search
+    #<div class="gridTitle">0257A-34 AP Comp Science A</div>
 
 
 
