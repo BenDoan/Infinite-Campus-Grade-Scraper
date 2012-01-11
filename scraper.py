@@ -21,6 +21,15 @@ def print_alert(text):
 def does_nothing(text):
     pass
 
+def is_regex_in_line(regex, regex_string):
+    try:
+        match = re.search(regex, regex_string)
+        does_nothing(match.group())
+        return True;
+    except Exception, e:
+        return False;
+
+
 def setup():
     # Cookie Jar
     cj = cookielib.LWPCookieJar()
@@ -69,22 +78,19 @@ link_list = []
 grade_dict= {}
 for x in br.links():
     url = x.base_url + x.url
-    try:
-        match = re.search(r'\.PortalOut', url)
-        does_nothing(match.group())
+    if is_regex_in_line(r'\.PortalOut', url)
         link_list.append(x)
-    except Exception, e:
-        pass
 
 for x in link_list:
     r = br.open(x.base_url + x.url)
     regex_string = '\n'.join(r.readlines())
-    grade = regex_search(r'\d\d\.\d\d', regex_string) #selects the first percetage on the page
+    try:
+        grade = regex_search(r'100%', regex_string) #selects the 100%
+    except Exception, e:
+        grade = regex_search(r'\d\d\.\d\d', regex_string) #selects the first percetage on the page
+
     cur_class = 'math' + str(random.randrange(1000))
     match = regex_search(r'\w\w\w\w\w', regex_string)
-    print match.group()
-
-    print
 
     grade_dict[cur_class] = grade
 
