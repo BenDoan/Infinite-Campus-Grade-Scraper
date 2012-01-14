@@ -78,17 +78,16 @@ link_list = []
 grade_dict= {}
 for x in br.links():
     url = x.base_url + x.url
-    if is_regex_in_line(r'\.PortalOut', url)
+    if is_regex_in_line(r'\.PortalOut', url):
         link_list.append(x)
 
 for x in link_list:
     r = br.open(x.base_url + x.url)
     regex_string = '\n'.join(r.readlines())
     try:
-        grade = regex_search(r'100%', regex_string) #selects the 100%
-    except Exception, e:
         grade = regex_search(r'\d\d\.\d\d', regex_string) #selects the first percetage on the page
-
+    except Exception, e:
+        pass
     cur_class = 'math' + str(random.randrange(1000))
     match = regex_search(r'\w\w\w\w\w', regex_string)
 
