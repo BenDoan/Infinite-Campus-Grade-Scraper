@@ -10,18 +10,22 @@ import random
 import config
 
 def regex_search(regex, regex_string):
+    """does a regex search on 'regex_string' and returns the results"""
     match = re.search(regex, regex_string)
     return match.group()
 
 def print_alert(text):
+    """prints 'text' surrounded by whitespace"""
     print "\n\n\n\n"
     print text
     print "\n\n\n\n"
 
 def does_nothing(text):
+    """does nothing"""
     pass
 
-def is_regex_in_line(regex, regex_string):
+def is_regex_in_string(regex, regex_string):
+    """checks if a regex match is in 'string'"""
     try:
         match = re.search(regex, regex_string)
         does_nothing(match.group())
@@ -31,6 +35,7 @@ def is_regex_in_line(regex, regex_string):
 
 
 def setup():
+    """general setup commands"""
     # Cookie Jar
     cj = cookielib.LWPCookieJar()
     br.set_cookiejar(cj)
@@ -78,7 +83,7 @@ link_list = []
 grade_dict= {}
 for x in br.links():
     url = x.base_url + x.url
-    if is_regex_in_line(r'\.PortalOut', url):
+    if is_regex_in_string(r'\.PortalOut', url):
         link_list.append(x)
 
 for x in link_list:
