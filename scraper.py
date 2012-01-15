@@ -102,8 +102,9 @@ r = br.open("https://www.campus.mpsomaha.org/campus/portal/portal.xsl?x=portal.P
 link_list = []
 grade_dict= {}
 
-#find all grade page links in the page and add
-#them to the link list array
+#loops through the links in the schedule page
+#and adds the grade page links to the link_list
+#array
 for x in br.links():
     url = x.base_url + x.url
     if is_regex_in_string(r'\.PortalOut', url):
@@ -122,6 +123,7 @@ for x in link_list:
     for x in url_page:
         if is_regex_in_string(r'gridTitle', x):
             cur_class = '\n'.join(between(r'<div class="gridTitle">','</div>', x))
+            cur_class = cur_class.rstrip()
 
     grade_dict[cur_class] = grade
 
@@ -129,7 +131,7 @@ for x in link_list:
 print "\n\n\n\n\n\n"
 final_grade_list = "";
 for x in grade_dict:
-    final_grade_list += x.rstrip() + ':\t\t' + grade_dict[x] + '%\n'
+    final_grade_list += x + ':\t\t' + grade_dict[x] + '%\n'
 print final_grade_list
 
 #send_email("bendoan5@gmail.com", "Grades", final_grade_list)
