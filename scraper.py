@@ -1,5 +1,7 @@
 #TODO: Deal with 100%s
 
+#to schedule in windows:
+#schtasks /Create /SC DAILY /TN PythonTask /TR "PATH_TO_PYTHON_EXE PATH_TO_PYTHON_SCRIPT"
 
 import mechanize
 import cookielib
@@ -52,7 +54,6 @@ def send_email(address, subject, message):
     server.login(config.EMAILUSERNAME, config.EMAILPASSWORD)
     server.sendmail(config.EMAILUSERNAME, address, send_info + message)
     server.quit()
-
 
 
 def setup():
@@ -130,4 +131,5 @@ final_grade_list = "";
 for x in grade_dict:
     final_grade_list += x.rstrip() + ':\t\t' + grade_dict[x] + '%\n'
 print final_grade_list
-send_email("ben@simcaster.net", "Grades", final_grade_list)
+
+#send_email("bendoan5@gmail.com", "Grades", final_grade_list)
