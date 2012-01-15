@@ -49,7 +49,8 @@ def is_regex_in_string(regex, regex_string):
 
 def between(left,right,s):
     """searches for text between left and right
-    found here:http://stackoverflow.com/questions/3429086/python-regex-to-get-all-text-until-a-and-get-text-inside-brackets
+    found here:http://stackoverflow.com/questions/3429086/
+    python-regex-to-get-all-text-until-a-and-get-text-inside-brackets
 
     >>> between('tfs', 'gsa', 'tfsaskdfnsdlkfjkldsfjgsa')
     'askdfnsdlkfjkldsfj'
@@ -69,9 +70,16 @@ def send_email(address, subject, message):
     server.quit()
 
 def find_page_part(page_list, regex, before, after):
+    """returns the text in between before and after,
+    in the first line containg regex
+
+    >>> find_page_part(('abc','ahd'),r'abc','a','c')
+    'b'
+    """
     for x in page_list:
         if is_regex_in_string(regex, x):
             return between(before, after, x)
+    print_alert('No match found')
 
 def setup():
     """general setup commands"""
@@ -130,16 +138,13 @@ for x in link_list:
     r = br.open(x.base_url + x.url)
     url_page = r.readlines()
 
-    regex_string = '\n'.join(url_page)
-    grade = regex_search(r'\d\d\.\d\d', regex_string) #selects the first percetage on the page
+    #grade = find_page_part(url_page, r'grayText',
+            #'<span class="grayText">', '%</span>').rstrip()
 
-    cur_class = find_page_part(url_page, r'gridTitle', '<div class="gridTitle">',
-                '</div>').rstrip()
-    #for x in url_page:
-        #if is_regex_in_string(r'gridTitle', x):
-            #cur_class = between(r'<div class="gridTitle">','</div>', x)
-            #cur_class = cur_class.rstrip()
+    grade = '100%'
 
+    cur_class = find_page_part(url_page, r'gridTitle',
+            '<div class="gridTitle">', '</div>').rstrip()
     grade_dict[cur_class] = grade
 
 
