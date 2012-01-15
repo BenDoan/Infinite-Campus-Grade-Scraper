@@ -1,2 +1,5 @@
-username = ""
-password = ""
+USERNAME = ""
+PASSWORD = ""
+
+EMAILUSERNAME = ""
+EMAILPASSWORD = ""

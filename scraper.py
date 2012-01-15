@@ -6,6 +6,7 @@ import cookielib
 import datetime
 import re
 import random
+import smtplib
 
 import config
 
@@ -41,6 +42,17 @@ def between(left,right,s):
     before,_,a = s.partition(left)
     a,_,after = a.partition(right)
     return before,a,after
+
+def send_email(address, subject, message):
+    """sends an email using the gmail account info specifed in config"""
+    send_info = "From: %s\nTo: %s\nSubject: %s\nX-Mailer: My-Mail\n\n" % (config.EMAILUSERNAME, address, subject)
+
+    server = smtplib.SMTP('smtp.gmail.com:587')
+    server.starttls()
+    server.login(config.EMAILUSERNAME, config.EMAILPASSWORD)
+    server.sendmail(config.EMAILUSERNAME, address, send_info + message)
+    server.quit()
+
 
 
 def setup():
@@ -81,8 +93,8 @@ setup()
 
 r = br.open('https://www.campus.mpsomaha.org/campus/portal/millard.jsp?status=portalLogoff&lang=en')
 br.select_form(nr=0)
-br.form['username'] = config.username
-br.form['password'] = config.password ##these need to be set in the config.py file
+br.form['username'] = config.USERNAME
+br.form['password'] = config.PASSWORD ##these need to be set in the config.py file
 br.submit()
 r = br.open("https://www.campus.mpsomaha.org/campus/portal/portal.xsl?x=portal.PortalOutline&lang=en&context=187976-1119-1110&personID=187976&studentFirstName=Benjamin&lastName=Doan&firstName=Benjamin&schoolID=45&calendarID=1119&structureID=1110&calendarName=2011-2012%20Millard%20West%20HS&mode=schedule&x=portal.PortalSchedule&x=resource.PortalOptions")
 
@@ -97,7 +109,8 @@ for x in br.links():
         link_list.append(x)
 
 #opens all pages in the link_list array and adds
-#the first percentage to the grade_list dict
+#the first percentage and the corresponding class name
+#to the grade_list dict
 for x in link_list:
     r = br.open(x.base_url + x.url)
     url_page = r.readlines()
@@ -113,5 +126,8 @@ for x in link_list:
 
 
 print "\n\n\n\n\n\n"
+final_grade_list = "";
 for x in grade_dict:
-    print x.rstrip() + ':\t\t' + grade_dict[x] + '%'
+    final_grade_list += x.rstrip() + ':\t\t' + grade_dict[x] + '%\n'
+print final_grade_list
+send_email("ben@simcaster.net", "Grades", final_grade_list)
