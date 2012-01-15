@@ -34,6 +34,14 @@ def is_regex_in_string(regex, regex_string):
     except Exception, e:
         return False;
 
+def between(left,right,s):
+    """searches for text between left and right
+    found here:http://stackoverflow.com/questions/3429086/python-regex-to-get-all-text-until-a-and-get-text-inside-brackets
+    """
+    before,_,a = s.partition(left)
+    a,_,after = a.partition(right)
+    return before,a,after
+
 
 def setup():
     """general setup commands"""
@@ -105,20 +113,11 @@ for x in link_list:
 
     for x in url_page:
         if is_regex_in_string(r'gridTitle', x):
-            print x
-            cur_class = x
-            asdsa = regex_search(r'...', x)
-
-
-    #match = regex_search(r'\w\w\w\w\w', regex_string)
+            cur_class = '\n'.join(between(r'<div class="gridTitle">','</div>', x))
 
     grade_dict[cur_class] = grade
-
-    #string to search
-    #<div class="gridTitle">0257A-34 AP Comp Science A</div>
-
 
 
 print "\n\n\n\n\n\n"
 for x in grade_dict:
-    print x.rstrip() + ': ' + grade_dict[x] + '%'
+    print x.rstrip() + ':\t\t' + grade_dict[x] + '%'
