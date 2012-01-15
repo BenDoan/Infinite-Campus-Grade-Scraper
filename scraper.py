@@ -52,11 +52,11 @@ def between(left,right,s):
     found here:http://stackoverflow.com/questions/3429086/python-regex-to-get-all-text-until-a-and-get-text-inside-brackets
 
     >>> between('tfs', 'gsa', 'tfsaskdfnsdlkfjkldsfjgsa')
-    ('', 'askdfnsdlkfjkldsfj', '')
+    'askdfnsdlkfjkldsfj'
     """
     before,_,a = s.partition(left)
     a,_,after = a.partition(right)
-    return before,a,after
+    return a
 
 def send_email(address, subject, message):
     """sends an email using the gmail account info specifed in config"""
@@ -68,6 +68,10 @@ def send_email(address, subject, message):
     server.sendmail(config.EMAILUSERNAME, address, send_info + message)
     server.quit()
 
+def find_page_part(page_list, regex, before, after):
+    for x in page_list:
+        if is_regex_in_string(regex, x):
+            return between(before, after, x)
 
 def setup():
     """general setup commands"""
@@ -129,10 +133,12 @@ for x in link_list:
     regex_string = '\n'.join(url_page)
     grade = regex_search(r'\d\d\.\d\d', regex_string) #selects the first percetage on the page
 
-    for x in url_page:
-        if is_regex_in_string(r'gridTitle', x):
-            cur_class = '\n'.join(between(r'<div class="gridTitle">','</div>', x))
-            cur_class = cur_class.rstrip()
+    cur_class = find_page_part(url_page, r'gridTitle', '<div class="gridTitle">',
+                '</div>').rstrip()
+    #for x in url_page:
+        #if is_regex_in_string(r'gridTitle', x):
+            #cur_class = between(r'<div class="gridTitle">','</div>', x)
+            #cur_class = cur_class.rstrip()
 
     grade_dict[cur_class] = grade
 
@@ -140,7 +146,7 @@ for x in link_list:
 print "\n\n\n\n\n\n"
 final_grade_list = "";
 for x in grade_dict:
-    final_grade_list += x + ':\t\t' + grade_dict[x] + '%'
+    final_grade_list += x + ':\t\t' + grade_dict[x] + '%\n'
 print final_grade_list
 
 #send_email("bendoan5@gmail.com", "Grades", final_grade_list)
