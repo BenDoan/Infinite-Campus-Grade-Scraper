@@ -12,7 +12,8 @@ import config
 def regex_search(regex, regex_string):
     """does a regex search on 'regex_string' and returns the results"""
     match = re.search(regex, regex_string)
-    return match.group()
+    if match is not None:
+        return match.group()
 
 def print_alert(text):
     """prints 'text' surrounded by whitespace"""
@@ -81,20 +82,35 @@ r = br.open("https://www.campus.mpsomaha.org/campus/portal/portal.xsl?x=portal.P
 
 link_list = []
 grade_dict= {}
+
+#find all grade page links in the page and add
+#them to the link list array
 for x in br.links():
     url = x.base_url + x.url
     if is_regex_in_string(r'\.PortalOut', url):
         link_list.append(x)
 
+#opens all pages in the link_list array and adds
+#the first percentage to the grade_list dict
 for x in link_list:
     r = br.open(x.base_url + x.url)
-    regex_string = '\n'.join(r.readlines())
+    url_page = r.readlines()
+    regex_string = '\n'.join(url_page)
     try:
         grade = regex_search(r'\d\d\.\d\d', regex_string) #selects the first percetage on the page
     except Exception, e:
         pass
+
     cur_class = 'math' + str(random.randrange(1000))
-    match = regex_search(r'\w\w\w\w\w', regex_string)
+
+    for x in url_page:
+        if is_regex_in_string(r'gridTitle', x):
+            print x
+            cur_class = x
+            asdsa = regex_search(r'...', x)
+
+
+    #match = regex_search(r'\w\w\w\w\w', regex_string)
 
     grade_dict[cur_class] = grade
 
@@ -105,4 +121,4 @@ for x in link_list:
 
 print "\n\n\n\n\n\n"
 for x in grade_dict:
-    print x + ': ' + grade_dict[x]
+    print x.rstrip() + ': ' + grade_dict[x] + '%'
