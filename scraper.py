@@ -13,7 +13,11 @@ import smtplib
 import config
 
 def regex_search(regex, regex_string):
-    """does a regex search on 'regex_string' and returns the results"""
+    """does a regex search on 'regex_string' and returns the results
+
+    >>> regex_search(r'...a', 'FJSIfdsa')
+    'fdsa'
+    """
     match = re.search(regex, regex_string)
     if match is not None:
         return match.group()
@@ -29,7 +33,13 @@ def does_nothing(text):
     pass
 
 def is_regex_in_string(regex, regex_string):
-    """checks if a regex match is in 'string'"""
+    """checks if a regex match is in string
+
+    >>> is_regex_in_string(r'333', 'jaskljdsak233aksdlja333')
+    True
+    >>> is_regex_in_string(r'434', 'sdlkfnhds43asdasd')
+    False
+    """
     try:
         match = re.search(regex, regex_string)
         does_nothing(match.group())
@@ -40,6 +50,9 @@ def is_regex_in_string(regex, regex_string):
 def between(left,right,s):
     """searches for text between left and right
     found here:http://stackoverflow.com/questions/3429086/python-regex-to-get-all-text-until-a-and-get-text-inside-brackets
+
+    >>> between('tfs', 'gsa', 'tfsaskdfnsdlkfjkldsfjgsa')
+    ('', 'askdfnsdlkfjkldsfj', '')
     """
     before,_,a = s.partition(left)
     a,_,after = a.partition(right)
@@ -88,10 +101,6 @@ br = mechanize.Browser()
 setup()
 
 
-
-
-
-
 r = br.open('https://www.campus.mpsomaha.org/campus/portal/millard.jsp?status=portalLogoff&lang=en')
 br.select_form(nr=0)
 br.form['username'] = config.USERNAME
@@ -131,7 +140,11 @@ for x in link_list:
 print "\n\n\n\n\n\n"
 final_grade_list = "";
 for x in grade_dict:
-    final_grade_list += x + ':\t\t' + grade_dict[x] + '%\n'
+    final_grade_list += x + ':\t\t' + grade_dict[x] + '%'
 print final_grade_list
 
 #send_email("bendoan5@gmail.com", "Grades", final_grade_list)
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
