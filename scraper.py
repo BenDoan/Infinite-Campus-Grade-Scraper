@@ -1,4 +1,5 @@
-#TODO: Deal with 100%s
+#TODO: remove class id
+#TODO: fix indenting
 
 #to schedule in windows:
 #schtasks /Create /SC DAILY /TN PythonTask /TR "PATH_TO_PYTHON_EXE PATH_TO_PYTHON_SCRIPT"
