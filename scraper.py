@@ -35,7 +35,7 @@ def does_nothing(text):
 def is_regex_in_string(regex, regex_string):
     """checks if a regex match is in string
 
-    >>> is_regex_in_string(r'333', 'jaskljdsak233aksdlja333')
+    >>> is_regex_in_string(r'333', 'jaskljds3aksdlja33313d')
     True
     >>> is_regex_in_string(r'434', 'sdlkfnhds43asdasd')
     False
@@ -79,7 +79,6 @@ def find_page_part(page_list, regex, before, after):
     for x in page_list:
         if is_regex_in_string(regex, x):
             return between(before, after, x)
-    print_alert('No match found')
 
 def setup():
     """general setup commands"""
@@ -124,8 +123,7 @@ link_list = []
 grade_dict= {}
 
 #loops through the links in the schedule page
-#and adds the grade page links to the link_list
-#array
+#and adds the grade page links to the link_list array
 for x in br.links():
     url = x.base_url + x.url
     if is_regex_in_string(r'\.PortalOut', url):
@@ -138,14 +136,14 @@ for x in link_list:
     r = br.open(x.base_url + x.url)
     url_page = r.readlines()
 
-    #grade = find_page_part(url_page, r'grayText',
-            #'<span class="grayText">', '%</span>').rstrip()
-
-    grade = '100%'
+    grade = find_page_part(url_page, r'grayText', '<span class="grayText">', '%</span>')
 
     cur_class = find_page_part(url_page, r'gridTitle',
             '<div class="gridTitle">', '</div>').rstrip()
-    grade_dict[cur_class] = grade
+    if grade is not None:
+        grade_dict[cur_class] = grade
+    else:
+        grade_dict[cur_class] = "Error"
 
 
 print "\n\n\n\n\n\n"
