@@ -128,13 +128,13 @@ grade_dict= {}
 for x in br.links():
     url = x.base_url + x.url
     if is_regex_in_string(r'\.PortalOut', url):
-        link_list.append(x)
+        link_list.append(url)
 
 #opens all pages in the link_list array and adds
 #the first percentage and the corresponding class name
 #to the grade_list dict
 for x in link_list:
-    r = br.open(x.base_url + x.url)
+    r = br.open(x)
     url_page = r.readlines()
 
     grade = find_page_part(url_page, r'grayText', '<span class="grayText">', '%</span>')
