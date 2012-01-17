@@ -139,13 +139,13 @@ for x in link_list:
 
     grade = find_page_part(url_page, r'grayText', '<span class="grayText">', '%</span>')
 
-    cur_class = find_page_part(url_page, r'gridTitle',
+    course_name = find_page_part(url_page, r'gridTitle',
             '<div class="gridTitle">', '</div>').rstrip()
 
     if grade is not None:
-        grade_dict[cur_class] = grade
+        grade_dict[course_name] = grade
     else:
-        grade_dict[cur_class] = "Error"
+        grade_dict[course_name] = "Error"
 
 
 print "\n\n\n\n\n\n"
