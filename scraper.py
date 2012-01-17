@@ -141,6 +141,7 @@ for x in link_list:
 
     cur_class = find_page_part(url_page, r'gridTitle',
             '<div class="gridTitle">', '</div>').rstrip()
+
     if grade is not None:
         grade_dict[cur_class] = grade
     else:
