@@ -1,4 +1,4 @@
-Infinite Campus Grade Scraper - scrapes your grades off of infinite campus and emails them to you.
+Infinite Campus Grade Scraper - scrapes your grades from infinite campus and emails them to you.
 Copyright (C) 2012 Ben Doan
 
 This program is free software: you can redistribute it and/or modify

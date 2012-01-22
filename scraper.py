@@ -81,6 +81,22 @@ def find_page_part(page_list, regex, before, after):
         if is_regex_in_string(regex, x):
             return between(before, after, x)
 
+def read_csv(file_name):
+    """reads a csv file and returns it as a list of lists"""
+    final_list = []
+    reader = csv.reader(open(file_name, 'rb'), delimiter=',')
+    for x in reader:
+        final_list.append(x)
+    return final_list
+
+def add_to_csv(file_name, single_list):
+    """adds a list to the specified csv file"""
+    final_list = read_csv(file_name)
+    writer = csv.writer(open(file_name, 'wb'), delimiter=',',quoting=csv.QUOTE_MINIMAL)
+    final_list.append(single_list)
+    for x in final_list:
+        writer.writerow(x)
+
 def setup():
     """general setup commands"""
     # Cookie Jar
@@ -136,12 +152,8 @@ for x in br.links():
 for x in link_list:
     r = br.open(x.base_url + x.url)
     url_page = r.readlines()
-
     grade = find_page_part(url_page, r'grayText', '<span class="grayText">', '%</span>')
-
-    cur_class = find_page_part(url_page, r'gridTitle',
-            '<div class="gridTitle">', '</div>').rstrip()
-
+    cur_class = find_page_part(url_page, r'gridTitle', '<div class="gridTitle">', '</div>').rstrip()
     if grade is not None:
         grade_dict[cur_class] = grade
     else:
