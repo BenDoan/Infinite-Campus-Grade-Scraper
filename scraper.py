@@ -146,20 +146,27 @@ grade_dict= {}
 for x in br.links():
     url = x.base_url + x.url
     if is_regex_in_string(r'\.PortalOut', url):
-        link_list.append(x)
+        link_list.append(url)
 
 #opens all pages in the link_list array and adds
 #the first percentage and the corresponding class name
 #to the grade_list dict
 for x in link_list:
-    r = br.open(x.base_url + x.url)
+    r = br.open(x)
     url_page = r.readlines()
     grade = find_page_part(url_page, r'grayText', '<span class="grayText">', '%</span>')
+<<<<<<< HEAD
     cur_class = find_page_part(url_page, r'gridTitle', '<div class="gridTitle">', '</div>').rstrip()
+=======
+
+    course_name = find_page_part(url_page, r'gridTitle',
+            '<div class="gridTitle">', '</div>').rstrip()
+
+>>>>>>> 2efe21e8609f5d824bd20d18a843a3ab5076b328
     if grade is not None:
-        grade_dict[cur_class] = grade
+        grade_dict[course_name] = grade
     else:
-        grade_dict[cur_class] = "Error"
+        grade_dict[course_name] = "Error"
 
 print "\n\n\n\n\n\n"
 final_grade_string= "";
