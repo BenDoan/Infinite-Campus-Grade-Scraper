@@ -10,6 +10,8 @@ import datetime
 import re
 import random
 import smtplib
+import datetime
+import csv
 
 import config
 
@@ -159,14 +161,19 @@ for x in link_list:
     else:
         grade_dict[cur_class] = "Error"
 
-
 print "\n\n\n\n\n\n"
-final_grade_list = "";
+final_grade_string= "";
+final_grade_list = []
 for x in grade_dict:
-    final_grade_list += x + ':\t\t' + grade_dict[x] + '%\n'
-print final_grade_list
+    final_grade_string+= x + ':\t\t' + grade_dict[x] + '%\n'
+    now = datetime.datetime.now()
+    date = str(now.month) + "/" + str(now.day) + "/" + str(now.year)
+    final_grade_list = [x,grade_dict[x],date]
+    add_to_csv('data.csv', final_grade_list)
 
-#send_email("bendoan5@gmail.com", "Grades", final_grade_list)
+print final_grade_string
+
+#send_email("bendoan5@gmail.com", "Grades", final_grade_string)
 
 if __name__ == "__main__":
     import doctest
