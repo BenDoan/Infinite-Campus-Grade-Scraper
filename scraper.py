@@ -155,14 +155,11 @@ for x in link_list:
     r = br.open(x)
     url_page = r.readlines()
     grade = find_page_part(url_page, r'grayText', '<span class="grayText">', '%</span>')
-<<<<<<< HEAD
     cur_class = find_page_part(url_page, r'gridTitle', '<div class="gridTitle">', '</div>').rstrip()
-=======
 
     course_name = find_page_part(url_page, r'gridTitle',
             '<div class="gridTitle">', '</div>').rstrip()
 
->>>>>>> 2efe21e8609f5d824bd20d18a843a3ab5076b328
     if grade is not None:
         grade_dict[course_name] = grade
     else:
