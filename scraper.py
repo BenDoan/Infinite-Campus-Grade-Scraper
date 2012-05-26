@@ -126,56 +126,58 @@ def setup():
 
 
 
-# Browser
-br = mechanize.Browser()
-setup()
+def main():
+    # Browser
+    br = mechanize.Browser()
+    setup()
 
 
-r = br.open('https://www.campus.mpsomaha.org/campus/portal/millard.jsp?status=portalLogoff&lang=en')
-br.select_form(nr=0)
-br.form['username'] = config.USERNAME
-br.form['password'] = config.PASSWORD ##these need to be set in the config.py file
-br.submit()
-r = br.open("https://www.campus.mpsomaha.org/campus/portal/portal.xsl?x=portal.PortalOutline&lang=en&context=187976-1119-1110&personID=187976&studentFirstName=Benjamin&lastName=Doan&firstName=Benjamin&schoolID=45&calendarID=1119&structureID=1110&calendarName=2011-2012%20Millard%20West%20HS&mode=schedule&x=portal.PortalSchedule&x=resource.PortalOptions")
+    r = br.open('https://www.campus.mpsomaha.org/campus/portal/millard.jsp?status=portalLogoff&lang=en')
+    br.select_form(nr=0)
+    br.form['username'] = config.USERNAME
+    br.form['password'] = config.PASSWORD ##these need to be set in the config.py file
+    br.submit()
+    r = br.open("https://www.campus.mpsomaha.org/campus/portal/portal.xsl?x=portal.PortalOutline&lang=en&context=187976-1119-1110&personID=187976&studentFirstName=Benjamin&lastName=Doan&firstName=Benjamin&schoolID=45&calendarID=1119&structureID=1110&calendarName=2011-2012%20Millard%20West%20HS&mode=schedule&x=portal.PortalSchedule&x=resource.PortalOptions")
 
-link_list = []
-grade_dict= {}
+    link_list = []
+    grade_dict= {}
 
-#loops through the links in the schedule page
-#and adds the grade page links to the link_list array
-for x in br.links():
-    url = x.base_url + x.url
-    if is_regex_in_string(r'\.PortalOut', url):
-        link_list.append(url)
+    #loops through the links in the schedule page
+    #and adds the grade page links to the link_list array
+    for x in br.links():
+        url = x.base_url + x.url
+        if is_regex_in_string(r'\.PortalOut', url):
+            link_list.append(url)
 
-#opens all pages in the link_list array and adds
-#the first percentage and the corresponding class name
-#to the grade_list dict
-for x in link_list:
-    r = br.open(x)
-    url_page = r.readlines()
-    grade = find_page_part(url_page, r'grayText', '<span class="grayText">', '%</span>')
-    course_name = find_page_part(url_page, r'gridTitle', '<div class="gridTitle">', '</div>').rstrip()
+    #opens all pages in the link_list array and adds
+    #the first percentage and the corresponding class name
+    #to the grade_list dict
+    for x in link_list:
+        r = br.open(x)
+        url_page = r.readlines()
+        grade = find_page_part(url_page, r'grayText', '<span class="grayText">', '%</span>')
+        course_name = find_page_part(url_page, r'gridTitle', '<div class="gridTitle">', '</div>').rstrip()
 
-    if grade is not None:
-        grade_dict[course_name] = grade
-    else:
-        grade_dict[course_name] = "Error"
+        if grade is not None:
+            grade_dict[course_name] = grade
+        else:
+            grade_dict[course_name] = "Error"
 
-print "\n\n\n\n\n\n"
-final_grade_string= "";
-final_grade_list = []
-for x in grade_dict:
-    final_grade_string+= x + ':\t\t' + grade_dict[x] + '%\n'
-    now = datetime.datetime.now()
-    date = str(now.month) + "/" + str(now.day) + "/" + str(now.year)
-    final_grade_list = [x,grade_dict[x],date]
-    add_to_csv('data.csv', final_grade_list)
+    print "\n\n\n\n\n\n"
+    final_grade_string= "";
+    final_grade_list = []
+    for x in grade_dict:
+        final_grade_string+= x + ':\t\t' + grade_dict[x] + '%\n'
+        now = datetime.datetime.now()
+        date = str(now.month) + "/" + str(now.day) + "/" + str(now.year)
+        final_grade_list = [x,grade_dict[x],date]
+        add_to_csv('data.csv', final_grade_list)
 
-print final_grade_string
+    print final_grade_string
 
-#send_email("bendoan5@gmail.com", "Grades", final_grade_string)
+    #send_email("bendoan5@gmail.com", "Grades", final_grade_string)
 
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
+    main()
