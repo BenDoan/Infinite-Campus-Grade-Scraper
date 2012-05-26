@@ -18,16 +18,16 @@ def add_to_csv(file_name, single_list):
 grade_list = []
 date_list = []
 for x in read_csv('data.csv'):
-    print x[0]
-    if x[0] == "0333-33 Zoology":
-        grade_list.append(x[1])
-        date_list.append(x[2])
+    grade_list.append(x[1])
+    date_list.append(x[2])
 
 for x in date_list:
+    print x
+
+for x in grade_list:
     print x
 
 plt.plot(date_list, grade_list)
 plt.ylabel('Grades')
 plt.ylabel('Date')
 plt.show()
-
