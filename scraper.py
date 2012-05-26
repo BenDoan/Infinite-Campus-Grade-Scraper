@@ -15,6 +15,8 @@ import csv
 
 import config
 
+br = mechanize.Browser()
+
 def regex_search(regex, regex_string):
     """does a regex search on 'regex_string' and returns the results
 
