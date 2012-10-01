@@ -1,5 +1,4 @@
 #TODO: remove class id
-#TODO: fix indenting
 
 #to schedule in windows:
 #schtasks /Create /SC DAILY /TN PythonTask /TR "PATH_TO_PYTHON_EXE PATH_TO_PYTHON_SCRIPT"
@@ -24,12 +23,6 @@ def regex_search(regex, regex_string):
     match = re.search(regex, regex_string)
     if match is not None:
         return match.group()
-
-def print_alert(text):
-    """prints 'text' surrounded by whitespace"""
-    print "\n\n\n\n"
-    print text
-    print "\n\n\n\n"
 
 def does_nothing(text):
     """does nothing"""
@@ -171,7 +164,7 @@ def main():
 
     print final_grade_string
 
-    #send_email("bendoan5@gmail.com", "Grades", final_grade_string)
+    #send_email(RECIEVINGEMAIL, "Grades", final_grade_string)
 
 if __name__ == "__main__":
     import doctest
