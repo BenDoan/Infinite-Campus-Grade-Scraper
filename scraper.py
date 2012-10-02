@@ -126,6 +126,7 @@ def main():
     br.form['username'] = config.USERNAME
     br.form['password'] = config.PASSWORD ##these need to be set in the config.py file
     br.submit()
+
     r = br.open("https://www.campus.mpsomaha.org/campus/portal/portal.xsl?x=portal.PortalOutline&lang=en&context=187976-1220-1215&personID=187976&studentFirstName=Benjamin&lastName=Doan&firstName=Benjamin&schoolID=45&calendarID=1220&structureID=1215&calendarName=2012-13%20Millard%20West%20HS&mode=schedule&x=portal.PortalSchedule&x=resource.PortalOptions")
 
     link_list = []
@@ -164,7 +165,7 @@ def main():
 
     print final_grade_string
 
-    #send_email(RECIEVINGEMAIL, "Grades", final_grade_string)
+    #send_email(config.RECIEVINGEMAIL, "Grades", final_grade_string)
 
 if __name__ == "__main__":
     import doctest
