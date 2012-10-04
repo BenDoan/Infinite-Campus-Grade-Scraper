@@ -156,12 +156,24 @@ def main():
 
     final_grade_string= "";
     final_grade_list = []
+
+    prev_grade_list = read_csv('data.csv')
+    prev_grade_list.reverse()
+
+
     for x in grade_dict:
-        final_grade_string+= grade_dict[x] + '% - ' + x + '\n';
-        now = datetime.datetime.now()
-        date = str(now.month) + "/" + str(now.day) + "/" + str(now.year)
-        final_grade_list = [x,grade_dict[x],date]
-        add_to_csv('data.csv', final_grade_list)
+
+        if grade_dict[x] != "":
+            diff = ""
+            for y in prev_grade_list:
+                if y[0] == x:
+                    diff = float(grade_dict[x]) - float(y[1])
+                    break
+            final_grade_string+= grade_dict[x] + '% - ' + x + " (diff: " + str(diff) + "%)" + '\n';
+            now = datetime.datetime.now()
+            date = str(now.month) + "/" + str(now.day) + "/" + str(now.year)
+            final_grade_list = [x,grade_dict[x],date]
+            add_to_csv('data.csv', final_grade_list)
 
     print final_grade_string
 
