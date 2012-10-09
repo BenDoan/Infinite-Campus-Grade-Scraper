@@ -3,7 +3,6 @@
 #to schedule in windows:
 #schtasks /Create /SC DAILY /TN PythonTask /TR "PATH_TO_PYTHON_EXE PATH_TO_PYTHON_SCRIPT"
 
-from sys import argv
 import mechanize
 import cookielib
 import datetime
@@ -135,7 +134,7 @@ def getClassLinks():
             link_list.append(url)
     return link_list
 
-def getGradeDict():
+def get_grade_dict():
     """opens all pages in the link_list array and adds
     the last grade percentage and the corresponding class name
     to the grade_list dict
@@ -164,36 +163,36 @@ def login():
     br.submit()
 
 
-
-
-def main():
+def add_to_grades_database(grade_dict):
+    """Adds the class and grade combination to the database under
+    the current date.
     """
-    >>> main()
-    true
+    for class_name in grade_dict:
+        if grade_dict[class_name] != "":
+            now = datetime.datetime.now()
+            date = str(now.month) + "/" + str(now.day) + "/" + str(now.year)
+            add_to_csv('data.csv', [class_name,grade_dict[class_name],date])
+
+def get_grade_string(grade_dict):
+    """Extracts the grade_string, calculates the diff from
+    grade dict and return it
     """
-    setup()
-    login()
-    grade_dict = getGradeDict()
-
-    final_grade_string= "";
-    final_grade_list = []
-
+    final_grade_string = ""
     for x in grade_dict:
         if grade_dict[x] != "":
             diff = diffGrade(grade_dict, x)
-
             final_grade_string+= grade_dict[x] + '% - ' + x + " (diff: " + str(diff) + "%)" + '\n';
-            now = datetime.datetime.now()
-            date = str(now.month) + "/" + str(now.day) + "/" + str(now.year)
-            final_grade_list = [x,grade_dict[x],date]
-            add_to_csv('data.csv', final_grade_list)
+    return final_grade_string
+
+def main():
+    setup()
+    login()
+    grade_dict = get_grade_dict()
+    add_to_grades_database(grade_dict)
+
+    final_grade_string = get_grade_string(grade_dict)
 
     print final_grade_string
-
     #send_email(config.RECIEVINGEMAIL, "Grades", final_grade_string)
-    return true
 
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
-    main()
+main()
