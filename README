@@ -1,2 +1,9 @@
 -This script scrapes grades from infinite campus and offers the option to email them or output them to standard out.
--This project is currently in development and may need configuration to work with a specific district's infinite campus.
+-You need to rename _config.py to config.py and fill in the required information for this script to work!
+
+Usage: scraper.py [options]
+
+Options:
+  -h, --help   show this help message and exit
+  -p, --print  prints the grade report to stdout
+  -e, --email  email the grade report to user

@@ -10,6 +10,14 @@ import csv
 import config
 import string
 
+from optparse import OptionParser
+parser = OptionParser()
+parser.add_option("-p", "--print", action="store_true", dest="print_results",
+        help="prints the grade report to stdout")
+parser.add_option("-e", "--email", action="store_true", dest="email",
+        help="email the grade report to user")
+(options, args) = parser.parse_args()
+
 br = mechanize.Browser()
 
 def regex_search(regex, regex_string):
@@ -190,7 +198,9 @@ def main():
 
     final_grade_string = get_grade_string(grade_dict)
 
-    print final_grade_string
-    #send_email(config.RECIEVINGEMAIL, "Grades", final_grade_string)
+    if options.print_results:
+        print final_grade_string
+    if options.email:
+        send_email(config.RECIEVINGEMAIL, "Grades", final_grade_string)
 
 main()
