@@ -3,6 +3,7 @@
 #to schedule in windows:
 #schtasks /Create /SC DAILY /TN PythonTask /TR "PATH_TO_PYTHON_EXE PATH_TO_PYTHON_SCRIPT"
 
+from sys import argv
 import mechanize
 import cookielib
 import datetime
@@ -113,62 +114,74 @@ def setup():
     # User-Agent
     br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
 
+def diffGrade(grade_dict, className):
+    """returns the difference between the current class grade and the last one"""
+    diff = ""
+    for y in read_csv('data.csv')[::-1]:
+        if y[0] == className:
+            diff = float(grade_dict[className]) - float(y[1])
+            break
+    return diff
 
-
-
-def main():
-    # Browser
-    setup()
-
-
-    r = br.open('https://www.campus.mpsomaha.org/campus/portal/millard.jsp?status=portalLogoff&lang=en')
-    br.select_form(nr=0)
-    br.form['username'] = config.USERNAME
-    br.form['password'] = config.PASSWORD ##these need to be set in the config.py file
-    br.submit()
-
-    r = br.open("https://www.campus.mpsomaha.org/campus/portal/portal.xsl?x=portal.PortalOutline&lang=en&context=187976-1220-1215&personID=187976&studentFirstName=Benjamin&lastName=Doan&firstName=Benjamin&schoolID=45&calendarID=1220&structureID=1215&calendarName=2012-13%20Millard%20West%20HS&mode=schedule&x=portal.PortalSchedule&x=resource.PortalOptions")
-
+def getClassLinks():
+    """loops through the links in the schedule page
+    and adds the grade page links to the link_list array
+    """
+    r = br.open(config.SCHEDULEURL) #opens schdule page
     link_list = []
-    grade_dict= {}
-
-    #loops through the links in the schedule page
-    #and adds the grade page links to the link_list array
-    for x in br.links():
-        url = x.base_url + x.url
+    for link in br.links():
+        url = link.base_url + link.url
         if is_regex_in_string(r'\.PortalOut', url):
             link_list.append(url)
+    return link_list
 
-    #opens all pages in the link_list array and adds
-    #the first percentage and the corresponding class name
-    #to the grade_list dict
-    for x in link_list:
-        r = br.open(x)
-        url_page = r.readlines()
-        grade = find_page_part(url_page, r'grayText', '<span class="grayText">', '%</span>')
-        course_name = find_page_part(url_page, r'gridTitle', '<div class="gridTitle">', '</div>').rstrip()
+def getGradeDict():
+    """opens all pages in the link_list array and adds
+    the last grade percentage and the corresponding class name
+    to the grade_list dict
+    """
+    grade_dict = {}
+    for link in getClassLinks():
+        page = br.open(link).readlines()
+        grade = find_page_part(page, r'grayText', '<span class="grayText">', '%</span>')
+        course_name = find_page_part(page, r'gridTitle', '<div class="gridTitle">', '</div>').rstrip()
         course_name = string.replace(course_name, '&amp;', '&')
 
         if grade is not None:
             grade_dict[course_name] = grade
         else:
             grade_dict[course_name] = "Error"
+    return grade_dict
+
+def login():
+    """Logs in to the Infinite Campus at the
+    address specified in the config
+    """
+    br.open(config.LOGINURL)
+    br.select_form(nr=0)
+    br.form['username'] = config.USERNAME
+    br.form['password'] = config.PASSWORD ##these need to be set in the config.py file
+    br.submit()
+
+
+
+
+def main():
+    """
+    >>> main()
+    true
+    """
+    setup()
+    login()
+    grade_dict = getGradeDict()
 
     final_grade_string= "";
     final_grade_list = []
 
-    prev_grade_list = read_csv('data.csv')
-    prev_grade_list.reverse()
-
-
     for x in grade_dict:
-
         if grade_dict[x] != "":
-            diff = ""
-            for y in prev_grade_list:
-                if y[0] == x:
-                    diff = float(grade_dict[x]) - float(y[1])
-                    break
+            diff = diffGrade(grade_dict, x)
+
             final_grade_string+= grade_dict[x] + '% - ' + x + " (diff: " + str(diff) + "%)" + '\n';
             now = datetime.datetime.now()
             date = str(now.month) + "/" + str(now.day) + "/" + str(now.year)
@@ -178,6 +191,7 @@ def main():
     print final_grade_string
 
     #send_email(config.RECIEVINGEMAIL, "Grades", final_grade_string)
+    return true
 
 if __name__ == "__main__":
     import doctest
