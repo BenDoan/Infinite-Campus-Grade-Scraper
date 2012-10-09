@@ -1,5 +1,3 @@
-#TODO: remove class id
-
 #to schedule in windows:
 #schtasks /Create /SC DAILY /TN PythonTask /TR "PATH_TO_PYTHON_EXE PATH_TO_PYTHON_SCRIPT"
 
@@ -59,7 +57,7 @@ def send_email(address, subject, message):
     """sends an email using the gmail account info specifed in config"""
     send_info = "From: %s\nTo: %s\nSubject: %s\nX-Mailer: My-Mail\n\n" % (config.EMAILUSERNAME, address, subject)
 
-    server = smtplib.SMTP('smtp.gmail.com:587')
+    server = smtplib.SMTP(config.EMAILSMTPADDRESS)
     server.starttls()
     server.login(config.EMAILUSERNAME, config.EMAILPASSWORD)
     server.sendmail(config.EMAILUSERNAME, address, send_info + message)
