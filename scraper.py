@@ -11,12 +11,18 @@ import config
 import string
 
 from optparse import OptionParser
-parser = OptionParser()
+
+parser = OptionParser(description="A script to scrape grades from an infinite campus website")
 parser.add_option("-p", "--print", action="store_true", dest="print_results",
         help="prints the grade report to stdout")
 parser.add_option("-e", "--email", action="store_true", dest="email",
         help="email the grade report to user")
-(options, args) = parser.parse_args()
+
+#allows for testing
+try:
+    (options, args) = parser.parse_args()
+except SystemExit, e:
+    options = None
 
 br = mechanize.Browser()
 
@@ -51,8 +57,6 @@ def is_regex_in_string(regex, regex_string):
 
 def between(left,right,s):
     """searches for text between left and right
-    found here:http://stackoverflow.com/questions/3429086/
-    python-regex-to-get-all-text-until-a-and-get-text-inside-brackets
 
     >>> between('tfs', 'gsa', 'tfsaskdfnsdlkfjkldsfjgsa')
     'askdfnsdlkfjkldsfj'
@@ -191,6 +195,10 @@ def get_grade_string(grade_dict):
     return final_grade_string
 
 def main():
+    """
+    >>> main()
+
+    """
     setup()
     login()
     grade_dict = get_grade_dict()
@@ -198,9 +206,10 @@ def main():
 
     final_grade_string = get_grade_string(grade_dict)
 
-    if options.print_results:
-        print final_grade_string
-    if options.email:
-        send_email(config.RECIEVINGEMAIL, "Grades", final_grade_string)
+    if options is not None:
+        if options.print_results:
+            print final_grade_string
+        if options.email:
+            send_email(config.RECIEVINGEMAIL, "Grades", final_grade_string)
 
 main()
