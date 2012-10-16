@@ -25,6 +25,8 @@ except SystemExit, e:
     options = None
 
 br = mechanize.Browser()
+now = datetime.datetime.now()
+date = str(now.month) + "/" + str(now.day) + "/" + str(now.year)
 
 def regex_search(regex, regex_string):
     """does a regex search on 'regex_string' and returns the results
@@ -123,13 +125,12 @@ def setup():
     # User-Agent
     br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
 
-def diffGrade(grade_dict, className):
+def diffGrade(grade_dict, className, date):
     """returns the difference between the current class grade and the last one"""
     diff = ""
-    for y in read_csv('data.csv')[::-1]:
-        if y[0] == className:
+    for y in read_csv('data.csv'):
+        if y[0] == className and y[2] == date:
             diff = float(grade_dict[className]) - float(y[1])
-            break
     return diff
 
 def getClassLinks():
@@ -179,8 +180,6 @@ def add_to_grades_database(grade_dict):
     """
     for class_name in grade_dict:
         if grade_dict[class_name] != "":
-            now = datetime.datetime.now()
-            date = str(now.month) + "/" + str(now.day) + "/" + str(now.year)
             add_to_csv('data.csv', [class_name,grade_dict[class_name],date])
 
 def get_grade_string(grade_dict):
@@ -190,15 +189,11 @@ def get_grade_string(grade_dict):
     final_grade_string = ""
     for x in grade_dict:
         if grade_dict[x] != "":
-            diff = diffGrade(grade_dict, x)
+            diff = diffGrade(grade_dict, x, date)
             final_grade_string+= grade_dict[x] + '% - ' + x + " (diff: " + str(diff) + "%)" + '\n';
     return final_grade_string
 
 def main():
-    """
-    >>> main()
-
-    """
     setup()
     login()
     grade_dict = get_grade_dict()
