@@ -3,13 +3,13 @@
 
 import mechanize
 import cookielib
-import datetime
-import re
 import smtplib
+import re
 import csv
 import config
 import string
 
+from datetime import date, timedelta
 from optparse import OptionParser
 
 parser = OptionParser(description="A script to scrape grades from an infinite campus website")
@@ -17,6 +17,8 @@ parser.add_option("-p", "--print", action="store_true", dest="print_results",
         help="prints the grade report to stdout")
 parser.add_option("-e", "--email", action="store_true", dest="email",
         help="email the grade report to user")
+parser.add_option("-w", "--weekly", action="store_true", dest="weekly",
+        help="Changes the diff from the current grades and the last grades to the current grades and the grades from one week ago")
 
 #allows for testing
 try:
@@ -25,8 +27,7 @@ except SystemExit, e:
     options = None
 
 br = mechanize.Browser()
-now = datetime.datetime.now()
-date = str(now.month) + "/" + str(now.day) + "/" + str(now.year)
+date = date.today()
 
 def regex_search(regex, regex_string):
     """does a regex search on 'regex_string' and returns the results
@@ -114,7 +115,6 @@ def setup():
 
     # Browser options
     br.set_handle_equiv(True)
-    br.set_handle_gzip(True)
     br.set_handle_redirect(True)
     br.set_handle_referer(True)
     br.set_handle_robots(False)
@@ -129,8 +129,10 @@ def diffGrade(grade_dict, className, date):
     """returns the difference between the current class grade and the last one"""
     diff = ""
     for y in read_csv('data.csv'):
-        if y[0] == className and y[2] == date:
+        if y[0] == className and y[2] == str(date):
             diff = float(grade_dict[className]) - float(y[1])
+    if diff > 0:
+        diff = "+" + str(diff)
     return diff
 
 def getClassLinks():
@@ -193,15 +195,41 @@ def get_grade_string(grade_dict):
             final_grade_string+= grade_dict[x] + '% - ' + x + " (diff: " + str(diff) + "%)" + '\n';
     return final_grade_string
 
+def get_grade_string(grade_dict):
+    """Extracts the grade_string, calculates the diff from
+    grade dict and return it
+    """
+    final_grade_string = ""
+    for x in grade_dict:
+        if grade_dict[x] != "":
+            diff = diffGrade(grade_dict, x, date)
+            final_grade_string+= grade_dict[x] + '% - ' + x + " (diff: " + str(diff) + "%)" + '\n';
+    return final_grade_string
+
+def get_weekly_report(grade_dict):
+    final_grade_string = ""
+    for x in grade_dict:
+        if grade_dict[x] != "":
+            diff = diffGrade(grade_dict, x, date-timedelta(days=7))
+            if diff != "":
+                final_grade_string += grade_dict[x] + '% - ' + x + " (weekly diff: " + str(diff) + "%)" + '\n';
+    if final_grade_string == "":
+        final_grade_string = """************************\nNo data from one week ago\n************************"""
+    return final_grade_string
+
+
 def main():
     setup()
     login()
     grade_dict = get_grade_dict()
     add_to_grades_database(grade_dict)
 
-    final_grade_string = get_grade_string(grade_dict)
-
     if options is not None:
+        if options.weekly:
+            final_grade_string = get_weekly_report(grade_dict)
+        else:
+            final_grade_string = get_grade_string(grade_dict)
+
         if options.print_results:
             print final_grade_string
         if options.email:
