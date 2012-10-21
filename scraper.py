@@ -18,7 +18,7 @@ parser.add_option("-p", "--print", action="store_true", dest="print_results",
 parser.add_option("-e", "--email", action="store_true", dest="email",
         help="email the grade report to user")
 parser.add_option("-w", "--weekly", action="store_true", dest="weekly",
-        help="Changes the diff from the current grades and the last grades to the current grades and the grades from one week ago")
+        help="diffs using the grades from a week ago")
 
 #allows for testing
 try:
@@ -214,7 +214,7 @@ def get_weekly_report(grade_dict):
             if diff != "":
                 final_grade_string += grade_dict[x] + '% - ' + x + " (weekly diff: " + str(diff) + "%)" + '\n';
     if final_grade_string == "":
-        final_grade_string = """************************\nNo data from one week ago\n************************"""
+        final_grade_string = "************************\nNo data from one week ago\n************************"
     return final_grade_string
 
 
