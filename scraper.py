@@ -3,16 +3,18 @@
 #to schedule in windows:
 #schtasks /Create /SC DAILY /TN PythonTask /TR "PATH_TO_PYTHON_EXE PATH_TO_PYTHON_SCRIPT"
 
-import mechanize
 import cookielib
-import smtplib
-import re
 import csv
-import config
+import mechanize
+import re
+import smtplib
 import string
 
+from BeautifulSoup import BeautifulSoup
 from datetime import date, timedelta
 from optparse import OptionParser
+
+import config
 
 parser = OptionParser(description="A script to scrape grades from an infinite campus website")
 parser.add_option("-p", "--print", action="store_true", dest="print_results",
@@ -142,11 +144,39 @@ def getClassLinks():
     and adds the grade page links to the link_list array
     """
     r = br.open(config.SCHEDULEURL) #opens schdule page
+    soup = BeautifulSoup(r)
+    table = soup.find("table", cellpadding=2, bgcolor="#A0A0A0")
     link_list = []
-    for link in br.links():
-        url = link.base_url + link.url
-        if is_regex_in_string(r'\.PortalOut', url):
-            link_list.append(url)
+    for row in enumerate(table.findAll("tr")):
+        link_list.append([])
+        for col in enumerate(row[1].findAll('td')):
+            link_list[row[0]].append([])
+            if col[1].find('a'):
+                link_list[row[0]][col[0]] = col[1].find('a')
+    for x in link_list:
+        for y in x:
+            print y
+            print "\n"
+        print "\n\n"
+    complete_class_list = [[], [], [], []]
+    currClass = 0
+    currTerm = 0
+    print "==============\n\n\n"
+    for x in link_list:
+        for y in x:
+            if y:
+                if currTerm == 4:
+                    currTerm = 0
+                    currClass += 1
+                complete_class_list[currTerm].append(y)
+                currTerm += 1
+
+    #for x in complete_class_list:
+        #for y in x:
+            #print y
+            #print "\n"
+        #print "\n\n"
+        print complete_class_list
     return link_list
 
 def get_grade_dict():
@@ -174,7 +204,7 @@ def login():
     br.open(config.LOGINURL)
     br.select_form(nr=0)
     br.form['username'] = config.USERNAME
-    br.form['password'] = config.PASSWORD ##these need to be set in the config.py file
+    br.form['password'] = config.PASSWORD
     br.submit()
 
 
@@ -216,7 +246,7 @@ def get_weekly_report(grade_dict):
             if diff != "":
                 final_grade_string += grade_dict[x] + '% - ' + x + " (weekly diff: " + str(diff) + "%)" + '\n';
     if final_grade_string == "":
-        final_grade_string = "************************\nNo data from one week ago\n************************"
+        final_grade_string = "************************\nNo data from one week ago\n************************\n"
     return final_grade_string
 
 
