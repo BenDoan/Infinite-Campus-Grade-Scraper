@@ -139,7 +139,7 @@ def diffGrade(grade_dict, className, date):
         diff = "+" + str(diff)
     return diff
 
-def getClassLinks():
+def get_class_links():
     """loops through the links in the schedule page
     and adds the grade page links to the link_list array
     """
@@ -147,37 +147,22 @@ def getClassLinks():
     soup = BeautifulSoup(r)
     table = soup.find("table", cellpadding=2, bgcolor="#A0A0A0")
     link_list = []
-    for row in enumerate(table.findAll("tr")):
-        link_list.append([])
-        for col in enumerate(row[1].findAll('td')):
-            link_list[row[0]].append([])
-            if col[1].find('a'):
-                link_list[row[0]][col[0]] = col[1].find('a')
-    for x in link_list:
-        for y in x:
-            print y
-            print "\n"
-        print "\n\n"
-    complete_class_list = [[], [], [], []]
-    currClass = 0
-    currTerm = 0
-    print "==============\n\n\n"
-    for x in link_list:
-        for y in x:
-            if y:
-                if currTerm == 4:
-                    currTerm = 0
-                    currClass += 1
-                complete_class_list[currTerm].append(y)
-                currTerm += 1
+    for row in table.findAll("tr")[1:6]:
+        for col in row.findAll('td'):
+            link = col.find('a')['href']
+            if "mailto" in link:
+                link = None
+            link_list.append(link)
 
-    #for x in complete_class_list:
-        #for y in x:
-            #print y
-            #print "\n"
-        #print "\n\n"
-        print complete_class_list
     return link_list
+
+def get_term(class_links):
+    """returns the current term"""
+    term = 0
+    for class_link in enumerate(class_links[0:3]):
+        if class_link[1] is not None:
+            term = class_link[0]
+    return term
 
 def get_grade_dict():
     """opens all pages in the link_list array and adds
@@ -185,16 +170,21 @@ def get_grade_dict():
     to the grade_list dict
     """
     grade_dict = {}
-    for link in getClassLinks():
-        page = br.open(link).readlines()
-        grade = find_page_part(page, r'grayText', '<span class="grayText">', '%</span>')
-        course_name = find_page_part(page, r'gridTitle', '<div class="gridTitle">', '</div>').rstrip()
-        course_name = string.replace(course_name, '&amp;', '&')
+    class_links = get_class_links()
+    term = get_term(class_links)
+    base_url = config.LOGINURL.split("/campus")[0] + '/campus/'
+    for link in enumerate(class_links[term:]):
+        if link[0] % 4 == 0:
+            if link[1] is not None:
+                page = br.open(base_url + link[1]).readlines()
+                grade = find_page_part(page, r'grayText', '<span class="grayText">', '%</span>')
+                course_name = find_page_part(page, r'gridTitle', '<div class="gridTitle">', '</div>').rstrip()
+                course_name = string.replace(course_name, '&amp;', '&')
 
-        if grade is not None:
-            grade_dict[course_name] = grade
-        else:
-            grade_dict[course_name] = "Error"
+                if grade is not None:
+                    grade_dict[course_name] = grade
+                else:
+                    grade_dict[course_name] = "Error"
     return grade_dict
 
 def login():
