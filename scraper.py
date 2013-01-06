@@ -3,16 +3,18 @@
 #to schedule in windows:
 #schtasks /Create /SC DAILY /TN PythonTask /TR "PATH_TO_PYTHON_EXE PATH_TO_PYTHON_SCRIPT"
 
-import mechanize
 import cookielib
-import smtplib
-import re
 import csv
-import config
+import mechanize
+import re
+import smtplib
 import string
 
+from BeautifulSoup import BeautifulSoup
 from datetime import date, timedelta
 from optparse import OptionParser
+
+import config
 
 parser = OptionParser(description="A script to scrape grades from an infinite campus website")
 parser.add_option("-p", "--print", action="store_true", dest="print_results",
@@ -137,17 +139,30 @@ def diffGrade(grade_dict, className, date):
         diff = "+" + str(diff)
     return diff
 
-def getClassLinks():
+def get_class_links():
     """loops through the links in the schedule page
     and adds the grade page links to the link_list array
     """
     r = br.open(config.SCHEDULEURL) #opens schdule page
+    soup = BeautifulSoup(r)
+    table = soup.find("table", cellpadding=2, bgcolor="#A0A0A0")
     link_list = []
-    for link in br.links():
-        url = link.base_url + link.url
-        if is_regex_in_string(r'\.PortalOut', url):
-            link_list.append(url)
+    for row in table.findAll("tr")[1:6]:
+        for col in row.findAll('td'):
+            link = col.find('a')['href']
+            if "mailto" in link:
+                link = None
+            link_list.append(link)
+
     return link_list
+
+def get_term(class_links):
+    """returns the current term"""
+    term = 0
+    for class_link in enumerate(class_links[0:3]):
+        if class_link[1] is not None:
+            term = class_link[0]
+    return term
 
 def get_grade_dict():
     """opens all pages in the link_list array and adds
@@ -155,16 +170,21 @@ def get_grade_dict():
     to the grade_list dict
     """
     grade_dict = {}
-    for link in getClassLinks():
-        page = br.open(link).readlines()
-        grade = find_page_part(page, r'grayText', '<span class="grayText">', '%</span>')
-        course_name = find_page_part(page, r'gridTitle', '<div class="gridTitle">', '</div>').rstrip()
-        course_name = string.replace(course_name, '&amp;', '&')
+    class_links = get_class_links()
+    term = get_term(class_links)
+    base_url = config.LOGINURL.split("/campus")[0] + '/campus/'
+    for link in enumerate(class_links[term:]):
+        if link[0] % 4 == 0:
+            if link[1] is not None:
+                page = br.open(base_url + link[1]).readlines()
+                grade = find_page_part(page, r'grayText', '<span class="grayText">', '%</span>')
+                course_name = find_page_part(page, r'gridTitle', '<div class="gridTitle">', '</div>').rstrip()
+                course_name = string.replace(course_name, '&amp;', '&')
 
-        if grade is not None:
-            grade_dict[course_name] = grade
-        else:
-            grade_dict[course_name] = "Error"
+                if grade is not None:
+                    grade_dict[course_name] = grade
+                else:
+                    grade_dict[course_name] = "Error"
     return grade_dict
 
 def login():
@@ -174,7 +194,7 @@ def login():
     br.open(config.LOGINURL)
     br.select_form(nr=0)
     br.form['username'] = config.USERNAME
-    br.form['password'] = config.PASSWORD ##these need to be set in the config.py file
+    br.form['password'] = config.PASSWORD
     br.submit()
 
 
@@ -216,7 +236,7 @@ def get_weekly_report(grade_dict):
             if diff != "":
                 final_grade_string += grade_dict[x] + '% - ' + x + " (weekly diff: " + str(diff) + "%)" + '\n';
     if final_grade_string == "":
-        final_grade_string = "************************\nNo data from one week ago\n************************"
+        final_grade_string = "************************\nNo data from one week ago\n************************\n"
     return final_grade_string
 
 

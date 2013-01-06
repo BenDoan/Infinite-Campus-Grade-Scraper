@@ -1,6 +1,6 @@
 -This script scrapes grades from infinite campus and offers the option to email them or output them to standard out.
--Rename _config.py to config.py and fill in the required information for this script to work!
--Rename _data.csv to data.csv for the script to work!
+-Rename _config.py to config.py and fill in the required information for this script to work.
+-Rename _data.csv to data.csv for the script to work.
 
 Usage: scraper.py [options]
 
