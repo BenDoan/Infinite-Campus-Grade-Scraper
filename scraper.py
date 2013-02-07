@@ -129,7 +129,7 @@ def setup():
     # User-Agent
     br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
 
-def diffGrade(grade_dict, className, date):
+def diffGradeWeekly(grade_dict, className, date):
     """returns the difference between the current class grade and the last one"""
     diff = ""
     for y in read_csv('data.csv'):
@@ -137,6 +137,22 @@ def diffGrade(grade_dict, className, date):
             diff = float(grade_dict[className]) - float(y[1])
     if diff > 0:
         diff = "+" + str(diff)
+    return diff
+
+def diffGrade(grade_dict, className):
+    """returns the difference between the current class grade and the last one"""
+    diff = ""
+    got_first = False
+    for y in read_csv('data.csv')[::-1]:
+        if y[0] == className:
+            if got_first:
+                diff = float(y[1]) - float(grade_dict[className])
+                if diff > 0:
+                    return "+" + str(diff)
+                else:
+                    return diff
+            else:
+                got_first = True
     return diff
 
 def get_class_links():
@@ -213,18 +229,7 @@ def get_grade_string(grade_dict):
     final_grade_string = ""
     for x in grade_dict:
         if grade_dict[x] != "":
-            diff = diffGrade(grade_dict, x, date)
-            final_grade_string+= grade_dict[x] + '% - ' + x + " (diff: " + str(diff) + "%)" + '\n';
-    return final_grade_string
-
-def get_grade_string(grade_dict):
-    """Extracts the grade_string, calculates the diff from
-    grade dict and return it
-    """
-    final_grade_string = ""
-    for x in grade_dict:
-        if grade_dict[x] != "":
-            diff = diffGrade(grade_dict, x, date)
+            diff = diffGrade(grade_dict, x)
             final_grade_string+= grade_dict[x] + '% - ' + x + " (diff: " + str(diff) + "%)" + '\n';
     return final_grade_string
 
@@ -232,7 +237,7 @@ def get_weekly_report(grade_dict):
     final_grade_string = ""
     for x in grade_dict:
         if grade_dict[x] != "":
-            diff = diffGrade(grade_dict, x, date-timedelta(days=7))
+            diff = diffGradeWeekly(grade_dict, x, date-timedelta(days=7))
             if diff != "":
                 final_grade_string += grade_dict[x] + '% - ' + x + " (weekly diff: " + str(diff) + "%)" + '\n';
     if final_grade_string == "":
