@@ -16,7 +16,7 @@ from optparse import OptionParser
 
 import config
 
-parser = OptionParser(description="A script to scrape grades from an infinite campus website")
+parser = OptionParser(description="Scrapes grades from Infinite Campus websites")
 parser.add_option("-p", "--print", action="store_true", dest="print_results",
         help="prints the grade report to stdout")
 parser.add_option("-e", "--email", action="store_true", dest="email",
@@ -159,7 +159,7 @@ def get_class_links():
     """loops through the links in the schedule page
     and adds the grade page links to the link_list array
     """
-    r = br.open(config.SCHEDULE_URL) #opens schdule page
+    r = br.open(config.SCHEDULE_URL)
     soup = BeautifulSoup(r)
     table = soup.find("table", cellpadding=2, bgcolor="#A0A0A0")
     link_list = []
@@ -244,8 +244,8 @@ def get_grade_string(grade_dict):
         if grade_dict[class_name] != "":
             diff = diffGrade(grade_dict, class_name)
             if config.USE_AP_SCALING and "AP" in class_name:
-                letter_grade = get_letter_grade(float(grade_dict[class_name]) + 7.5)
-                if grade_dict[class_name] > config.A_CUTOFF + 15:
+                letter_grade = get_letter_grade(float(grade_dict[class_name]) + 7.5) #applies AP weight
+                if grade_dict[class_name] > config.A_CUTOFF + 15: #accounts for super As
                     letter_grade = letter_grade += "+"
             else:
                 letter_grade = get_letter_grade(grade_dict[class_name])
