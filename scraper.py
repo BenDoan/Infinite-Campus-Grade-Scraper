@@ -74,12 +74,12 @@ def between(left,right,s):
 
 def send_email(address, subject, message):
     """sends an email using the gmail account info specifed in config"""
-    send_info = "From: %s\nTo: %s\nSubject: %s\nX-Mailer: My-Mail\n\n" % (config.EMAILUSERNAME, address, subject)
+    send_info = "From: %s\nTo: %s\nSubject: %s\nX-Mailer: My-Mail\n\n" % (config.EMAIL_USERNAME, address, subject)
 
-    server = smtplib.SMTP(config.EMAILSMTPADDRESS)
+    server = smtplib.SMTP(config.EMAIL_SMTP_ADDRESS)
     server.starttls()
-    server.login(config.EMAILUSERNAME, config.EMAILPASSWORD)
-    server.sendmail(config.EMAILUSERNAME, address, send_info + message)
+    server.login(config.EMAIL_USERNAME, config.EMAIL_PASSWORD)
+    server.sendmail(config.EMAIL_USERNAME, address, send_info + message)
     server.quit()
 
 def find_page_part(page_list, regex, before, after):
@@ -129,7 +129,7 @@ def setup():
     # User-Agent
     br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
 
-def diffGradeWeekly(grade_dict, className, date):
+def diff_grade_weekly(grade_dict, className, date):
     """returns the difference between the current class grade and the last one"""
     diff = ""
     for y in read_csv('data.csv'):
@@ -159,7 +159,7 @@ def get_class_links():
     """loops through the links in the schedule page
     and adds the grade page links to the link_list array
     """
-    r = br.open(config.SCHEDULEURL) #opens schdule page
+    r = br.open(config.SCHEDULE_URL) #opens schdule page
     soup = BeautifulSoup(r)
     table = soup.find("table", cellpadding=2, bgcolor="#A0A0A0")
     link_list = []
@@ -188,7 +188,7 @@ def get_grade_dict():
     grade_dict = {}
     class_links = get_class_links()
     term = get_term(class_links)
-    base_url = config.LOGINURL.split("/campus")[0] + '/campus/'
+    base_url = config.LOGIN_URL.split("/campus")[0] + '/campus/'
     for link in enumerate(class_links[term:]):
         if link[0] % 4 == 0:
             if link[1] is not None:
@@ -207,7 +207,7 @@ def login():
     """Logs in to the Infinite Campus at the
     address specified in the config
     """
-    br.open(config.LOGINURL)
+    br.open(config.LOGIN_URL)
     br.select_form(nr=0)
     br.form['username'] = config.USERNAME
     br.form['password'] = config.PASSWORD
@@ -222,24 +222,43 @@ def add_to_grades_database(grade_dict):
         if grade_dict[class_name] != "":
             add_to_csv('data.csv', [class_name,grade_dict[class_name],date])
 
+def get_letter_grade(percent):
+    """returns the letter equivalent of the percent param"""
+    if float(percent) >= config.A_CUTOFF:
+        return "A"
+    elif float(percent) >= config.B_CUTOFF:
+        return "B"
+    elif float(percent) >= config.C_CUTOFF:
+        return "C"
+    elif float(percent) >= config.D_CUTOFF:
+        return "D"
+    else:
+        return "F"
+
 def get_grade_string(grade_dict):
     """Extracts the grade_string, calculates the diff from
     grade dict and return it
     """
     final_grade_string = ""
-    for x in grade_dict:
-        if grade_dict[x] != "":
-            diff = diffGrade(grade_dict, x)
-            final_grade_string+= grade_dict[x] + '% - ' + x + " (diff: " + str(diff) + "%)" + '\n';
+    for class_name in grade_dict:
+        if grade_dict[class_name] != "":
+            diff = diffGrade(grade_dict, class_name)
+            if config.USE_AP_SCALING and " AP " in class_name:
+                letter_grade = get_letter_grade(float(grade_dict[class_name]) + 7.5)
+            else:
+                letter_grade = get_letter_grade(grade_dict[class_name])
+            final_grade_string += letter_grade + " - " + grade_dict[class_name] + '% - ' + class_name + " (diff: " + str(diff) + "%)" + '\n';
     return final_grade_string
 
 def get_weekly_report(grade_dict):
+    """Generates the grade string, using a weekly diff"""
     final_grade_string = ""
     for x in grade_dict:
         if grade_dict[x] != "":
-            diff = diffGradeWeekly(grade_dict, x, date-timedelta(days=7))
+            diff = diff_grade_weekly(grade_dict, x, date-timedelta(days=7))
+            letter_grade = get_letter_grade(grade_dict[x])
             if diff != "":
-                final_grade_string += grade_dict[x] + '% - ' + x + " (weekly diff: " + str(diff) + "%)" + '\n';
+                final_grade_string += letter_grade + " - " + grade_dict[x] + '% - ' + x + " (weekly diff: " + str(diff) + "%)" + '\n';
     if final_grade_string == "":
         final_grade_string = "************************\nNo data from one week ago\n************************\n"
     return final_grade_string
@@ -260,6 +279,6 @@ def main():
         if options.print_results:
             print final_grade_string
         if options.email:
-            send_email(config.RECIEVINGEMAIL, "Grades", final_grade_string)
+            send_email(config.RECEIVING_EMAIL, "Grades", final_grade_string)
 
 main()
