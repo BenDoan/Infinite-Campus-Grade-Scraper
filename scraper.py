@@ -243,7 +243,7 @@ def get_grade_string(grade_dict):
     for class_name in grade_dict:
         if grade_dict[class_name] != "":
             diff = diffGrade(grade_dict, class_name)
-            if config.USE_AP_SCALING and " AP " in class_name:
+            if config.USE_AP_SCALING and "AP" in class_name:
                 letter_grade = get_letter_grade(float(grade_dict[class_name]) + 7.5)
             else:
                 letter_grade = get_letter_grade(grade_dict[class_name])
@@ -253,12 +253,15 @@ def get_grade_string(grade_dict):
 def get_weekly_report(grade_dict):
     """Generates the grade string, using a weekly diff"""
     final_grade_string = ""
-    for x in grade_dict:
-        if grade_dict[x] != "":
-            diff = diff_grade_weekly(grade_dict, x, date-timedelta(days=7))
-            letter_grade = get_letter_grade(grade_dict[x])
+    for class_name in grade_dict:
+        if grade_dict[class_name] != "":
+            diff = diff_grade_weekly(grade_dict, class_name, date-timedelta(days=7))
+            if config.USE_AP_SCALING and "AP" in class_name:
+                letter_grade = get_letter_grade(float(grade_dict[class_name]) + 7.5)
+            else:
+                letter_grade = get_letter_grade(grade_dict[class_name])
             if diff != "":
-                final_grade_string += letter_grade + " - " + grade_dict[x] + '% - ' + x + " (weekly diff: " + str(diff) + "%)" + '\n';
+                final_grade_string += letter_grade + " - " + grade_dict[class_name] + '% - ' + class_name + " (weekly diff: " + str(diff) + "%)" + '\n';
     if final_grade_string == "":
         final_grade_string = "************************\nNo data from one week ago\n************************\n"
     return final_grade_string
