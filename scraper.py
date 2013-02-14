@@ -245,6 +245,8 @@ def get_grade_string(grade_dict):
             diff = diffGrade(grade_dict, class_name)
             if config.USE_AP_SCALING and "AP" in class_name:
                 letter_grade = get_letter_grade(float(grade_dict[class_name]) + 7.5)
+                if grade_dict[class_name] > config.A_CUTOFF + 15:
+                    letter_grade = letter_grade += "+"
             else:
                 letter_grade = get_letter_grade(grade_dict[class_name])
             final_grade_string += letter_grade + " - " + grade_dict[class_name] + '% - ' + class_name + " (diff: " + str(diff) + "%)" + '\n';
