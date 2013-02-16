@@ -16,7 +16,7 @@ from optparse import OptionParser
 
 import config
 
-parser = OptionParser(description="A script to scrape grades from an infinite campus website")
+parser = OptionParser(description="Scrapes grades from Infinite Campus websites")
 parser.add_option("-p", "--print", action="store_true", dest="print_results",
         help="prints the grade report to stdout")
 parser.add_option("-e", "--email", action="store_true", dest="email",
@@ -246,7 +246,7 @@ def get_grade_string(grade_dict):
             if config.USE_AP_SCALING and "AP" in class_name:
                 letter_grade = get_letter_grade(float(grade_dict[class_name]) + 7.5)
                 if grade_dict[class_name] > config.A_CUTOFF + 15:
-                    letter_grade += "+"
+                    letter_grade = letter_grade += "+"
             else:
                 letter_grade = get_letter_grade(grade_dict[class_name])
             final_grade_string += letter_grade + " - " + grade_dict[class_name] + '% - ' + class_name + " (diff: " + str(diff) + "%)" + '\n';
