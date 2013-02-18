@@ -4,10 +4,7 @@
 #schtasks /Create /SC DAILY /TN PythonTask /TR "PATH_TO_PYTHON_EXE PATH_TO_PYTHON_SCRIPT"
 
 import cookielib
-import csv
 import mechanize
-import re
-import smtplib
 import string
 
 from BeautifulSoup import BeautifulSoup
@@ -15,6 +12,7 @@ from datetime import date, timedelta
 from optparse import OptionParser
 
 import config
+from utils import *
 
 parser = OptionParser(description="A script to scrape grades from an infinite campus website")
 parser.add_option("-p", "--print", action="store_true", dest="print_results",
@@ -56,74 +54,6 @@ class Class:
             return "D"
         else:
             return "F"
-
-def does_nothing(text):
-    """does nothing"""
-    pass
-
-def is_regex_in_string(regex, regex_string):
-    """checks if a regex match is in string
-
-    >>> is_regex_in_string(r'333', 'jaskljds3aksdlja33313d')
-    True
-    >>> is_regex_in_string(r'434', 'sdlkfnhds43asdasd')
-    False
-    """
-    try:
-        match = re.search(regex, regex_string)
-        does_nothing(match.group())
-        return True;
-    except Exception :
-        return False;
-
-def between(left,right,s):
-    """searches for text between left and right
-
-    >>> between('tfs', 'gsa', 'tfsaskdfnsdlkfjkldsfjgsa')
-    'askdfnsdlkfjkldsfj'
-    """
-    before,_,a = s.partition(left)
-    a,_,after = a.partition(right)
-    return a
-
-def send_email(address, subject, message):
-    """sends an email using the gmail account info specifed in config"""
-    send_info = "From: %s\nTo: %s\nSubject: %s\nX-Mailer: My-Mail\n\n" % (config.EMAIL_USERNAME, address, subject)
-
-    server = smtplib.SMTP(config.EMAIL_SMTP_ADDRESS)
-    server.starttls()
-    server.login(config.EMAIL_USERNAME, config.EMAIL_PASSWORD)
-    server.sendmail(config.EMAIL_USERNAME, address, send_info + message)
-    server.quit()
-
-def find_page_part(page_list, regex, before, after):
-    """returns the text in between before and after,
-    in the first line containg regex
-
-    >>> find_page_part(('abc','ahd'),r'abc','a','c')
-    'b'
-    """
-    toReturn = ""
-    for x in page_list:
-        if is_regex_in_string(regex, x):
-            toReturn = between(before, after, x)
-    return toReturn
-
-def read_csv(file_name):
-    """reads a csv file and returns it as a list of lists"""
-    final_list = []
-    reader = csv.reader(open(file_name, 'rb'), delimiter=',')
-    for x in reader:
-        final_list.append(x)
-    return final_list
-
-def add_to_csv(file_name, single_list):
-    """adds a list to the specified csv file"""
-    final_list = read_csv(file_name)
-    writer = csv.writer(open(file_name, 'wb'), delimiter=',',quoting=csv.QUOTE_MINIMAL)
-    final_list.append(single_list)
-    for x in final_list:
-        writer.writerow(x)
 
 def setup():
     """general setup commands"""
@@ -200,7 +130,7 @@ def get_term(class_links):
 def get_grades():
     """opens all pages in the link_list array and adds
     the last grade percentage and the corresponding class name
-    to the grade_list dict
+    to the grades list
     """
     grades = []
     class_links = get_class_links()
@@ -238,7 +168,6 @@ def add_to_grades_database(grades):
     for c in grades:
         if c.name != "":
             add_to_csv('data.csv', [c.name,c.grade,date])
-
 
 def get_grade_string(grades):
     """Extracts the grade_string, calculates the diff from
