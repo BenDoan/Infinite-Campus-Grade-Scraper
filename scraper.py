@@ -33,15 +33,29 @@ except SystemExit, e:
 br = mechanize.Browser()
 date = date.today()
 
-def regex_search(regex, regex_string):
-    """does a regex search on 'regex_string' and returns the results
+class Class:
+    grade = 0
+    name = ""
+    def __init__(self, name, grade):
+        self.grade = grade
+        self.name = name
 
-    >>> regex_search(r'...a', 'FJSIfdsa')
-    'fdsa'
-    """
-    match = re.search(regex, regex_string)
-    if match is not None:
-        return match.group()
+    def get_letter_grade(self):
+        """returns the letter equivalent of the class's grade"""
+        ap = True if config.USE_AP_SCALING and "AP" in self.name else False
+        float_grade = float(self.grade)
+        if ap and config.USE_AP_SCALING and float_grade >= config.A_CUTOFF:
+            return "A+"
+        elif (ap and float_grade >= config.B_CUTOFF) or float_grade >= config.A_CUTOFF:
+            return "A"
+        elif (ap and float_grade >= config.C_CUTOFF) or float_grade >= config.B_CUTOFF:
+            return "B"
+        elif float_grade >= config.C_CUTOFF:
+            return "C"
+        elif float_grade >= config.D_CUTOFF:
+            return "D"
+        else:
+            return "F"
 
 def does_nothing(text):
     """does nothing"""
@@ -129,24 +143,27 @@ def setup():
     # User-Agent
     br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
 
-def diff_grade_weekly(grade_dict, className, date):
+def diff_grade_weekly(grade, class_name, date):
     """returns the difference between the current class grade and the last one"""
     diff = ""
-    for y in read_csv('data.csv'):
-        if y[0] == className and y[2] == str(date):
-            diff = float(grade_dict[className]) - float(y[1])
-    if diff > 0:
-        diff = "+" + str(diff)
+    got_first = False #we need to skip the grade we just added
+    for line in read_csv('data.csv')[::-1]:
+        if line[0] == class_name and line[2] == str(date):
+            diff = float(line[1]) - float(grade)
+            if diff > 0:
+                return "+" + str(diff)
+            else:
+                return diff
     return diff
 
-def diffGrade(grade_dict, className):
+def diff_grade(grade, class_name):
     """returns the difference between the current class grade and the last one"""
     diff = ""
-    got_first = False
-    for y in read_csv('data.csv')[::-1]:
-        if y[0] == className:
+    got_first = False #we need to skip the grade we just added
+    for line in read_csv('data.csv')[::-1]:
+        if line[0] == class_name:
             if got_first:
-                diff = float(y[1]) - float(grade_dict[className])
+                diff = float(line[1]) - float(grade)
                 if diff > 0:
                     return "+" + str(diff)
                 else:
@@ -180,12 +197,12 @@ def get_term(class_links):
             term = class_link[0]
     return term
 
-def get_grade_dict():
+def get_grades():
     """opens all pages in the link_list array and adds
     the last grade percentage and the corresponding class name
     to the grade_list dict
     """
-    grade_dict = {}
+    grades = []
     class_links = get_class_links()
     term = get_term(class_links)
     base_url = config.LOGIN_URL.split("/campus")[0] + '/campus/'
@@ -198,10 +215,10 @@ def get_grade_dict():
                 course_name = string.replace(course_name, '&amp;', '&')
 
                 if grade is not None:
-                    grade_dict[course_name] = grade
+                    grades.append(Class(course_name, grade))
                 else:
-                    grade_dict[course_name] = "Error"
-    return grade_dict
+                    grades.append(Class(course_name, None))
+    return grades
 
 def login():
     """Logs in to the Infinite Campus at the
@@ -214,70 +231,51 @@ def login():
     br.submit()
 
 
-def add_to_grades_database(grade_dict):
+def add_to_grades_database(grades):
     """Adds the class and grade combination to the database under
     the current date.
     """
-    for class_name in grade_dict:
-        if grade_dict[class_name] != "":
-            add_to_csv('data.csv', [class_name,grade_dict[class_name],date])
+    for c in grades:
+        if c.name != "":
+            add_to_csv('data.csv', [c.name,c.grade,date])
 
-def get_letter_grade(percent):
-    """returns the letter equivalent of the percent param"""
-    if float(percent) >= config.A_CUTOFF:
-        return "A"
-    elif float(percent) >= config.B_CUTOFF:
-        return "B"
-    elif float(percent) >= config.C_CUTOFF:
-        return "C"
-    elif float(percent) >= config.D_CUTOFF:
-        return "D"
-    else:
-        return "F"
 
-def get_grade_string(grade_dict):
+def get_grade_string(grades):
     """Extracts the grade_string, calculates the diff from
     grade dict and return it
     """
     final_grade_string = ""
-    for class_name in grade_dict:
-        if grade_dict[class_name] != "":
-            diff = diffGrade(grade_dict, class_name)
-            if config.USE_AP_SCALING and "AP" in class_name:
-                letter_grade = get_letter_grade(float(grade_dict[class_name]) + 7.5)
-            else:
-                letter_grade = get_letter_grade(grade_dict[class_name])
-            final_grade_string += letter_grade + " - " + grade_dict[class_name] + '% - ' + class_name + " (diff: " + str(diff) + "%)" + '\n';
+    for c in grades:
+        letter_grade = c.get_letter_grade()
+        diff = diff_grade(c.grade, c.name)
+        final_grade_string += letter_grade + " - " + c.grade + '% - ' + c.name + " (diff: " + str(diff) + "%)" + '\n';
     return final_grade_string
 
-def get_weekly_report(grade_dict):
+def get_weekly_report(grades):
     """Generates the grade string, using a weekly diff"""
     final_grade_string = ""
-    for class_name in grade_dict:
-        if grade_dict[class_name] != "":
-            diff = diff_grade_weekly(grade_dict, class_name, date-timedelta(days=7))
-            if config.USE_AP_SCALING and "AP" in class_name:
-                letter_grade = get_letter_grade(float(grade_dict[class_name]) + 7.5)
-            else:
-                letter_grade = get_letter_grade(grade_dict[class_name])
+    for c in grades:
+        if c.grade != "":
+            letter_grade = c.get_letter_grade()
+            diff = diff_grade_weekly(c.grade, c.name, date-timedelta(days=7))
             if diff != "":
-                final_grade_string += letter_grade + " - " + grade_dict[class_name] + '% - ' + class_name + " (weekly diff: " + str(diff) + "%)" + '\n';
+                final_grade_string += letter_grade + " - " + c.grade + '% - ' + c.name + " (weekly diff: " + str(diff) + "%)" + '\n';
     if final_grade_string == "":
-        final_grade_string = "************************\nNo data from one week ago\n************************\n"
+        final_grade_string = "*************************\nNo data from one week ago\n*************************\n"
     return final_grade_string
 
 
 def main():
     setup()
     login()
-    grade_dict = get_grade_dict()
-    add_to_grades_database(grade_dict)
+    grades = get_grades()
+    add_to_grades_database(grades)
 
     if options is not None:
         if options.weekly:
-            final_grade_string = get_weekly_report(grade_dict)
+            final_grade_string = get_weekly_report(grades)
         else:
-            final_grade_string = get_grade_string(grade_dict)
+            final_grade_string = get_grade_string(grades)
 
         if options.print_results:
             print final_grade_string
