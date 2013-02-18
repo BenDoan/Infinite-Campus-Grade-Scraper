@@ -4,7 +4,10 @@
 #schtasks /Create /SC DAILY /TN PythonTask /TR "PATH_TO_PYTHON_EXE PATH_TO_PYTHON_SCRIPT"
 
 import cookielib
+import csv
 import mechanize
+import re
+import smtplib
 import string
 
 from BeautifulSoup import BeautifulSoup
