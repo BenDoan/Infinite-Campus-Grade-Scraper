@@ -32,6 +32,7 @@ br = mechanize.Browser()
 date = date.today()
 
 class Class:
+    """an object for an individual class, contains a grade and class name"""
     grade = 0
     name = ""
     def __init__(self, name, grade):
@@ -74,9 +75,8 @@ def setup():
     br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
 
 def diff_grade_weekly(grade, class_name, date):
-    """returns the difference between the current class grade and the last one"""
+    """returns the difference between the current class grade and the grade from one week ago"""
     diff = ""
-    got_first = False #we need to skip the grade we just added
     for line in read_csv('data.csv')[::-1]:
         if line[0] == class_name and line[2] == str(date):
             diff = float(line[1]) - float(grade)

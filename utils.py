@@ -2,10 +2,6 @@ import csv
 import re
 import smtplib
 
-def does_nothing(text):
-    """does nothing"""
-    pass
-
 def is_regex_in_string(regex, regex_string):
     """checks if a regex match is in string
 
@@ -16,9 +12,9 @@ def is_regex_in_string(regex, regex_string):
     """
     try:
         match = re.search(regex, regex_string)
-        does_nothing(match.group())
+        match.group()
         return True;
-    except Exception :
+    except Exception:
         return False;
 
 def between(left,right,s):
