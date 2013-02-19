@@ -29,12 +29,12 @@ def between(left,right,s):
 
 def send_email(smtp_address, smtp_username, smtp_password, address, subject, message):
     """sends an email using the gmail account info specifed in config"""
-    send_info = "From: %s\nTo: %s\nSubject: %s\nX-Mailer: My-Mail\n\n" % (address_from, address, subject)
+    send_info = "From: %s\nTo: %s\nSubject: %s\nX-Mailer: My-Mail\n\n" % (smtp_address, address, subject)
 
     server = smtplib.SMTP(smtp_address)
     server.starttls()
     server.login(smtp_username, smtp_password)
-    server.sendmail(address_from, address, send_info + message)
+    server.sendmail(smtp_address, address, send_info + message)
     server.quit()
 
 def find_page_part(page_list, regex, before, after):
