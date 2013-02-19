@@ -4,10 +4,7 @@
 #schtasks /Create /SC DAILY /TN PythonTask /TR "PATH_TO_PYTHON_EXE PATH_TO_PYTHON_SCRIPT"
 
 import cookielib
-import csv
 import mechanize
-import re
-import smtplib
 import string
 
 from BeautifulSoup import BeautifulSoup
@@ -212,6 +209,6 @@ def main():
         if options.print_results:
             print final_grade_string
         if options.email:
-            send_email(config.RECEIVING_EMAIL, "Grades", final_grade_string)
+            send_email(config.EMAIL_SMTP_ADDRESS, config.EMAIL_USERNAME, config.EMAIL_PASSWORD, config.RECEIVING_EMAIL, "Grades", final_grade_string)
 
 main()

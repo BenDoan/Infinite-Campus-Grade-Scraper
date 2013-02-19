@@ -27,14 +27,14 @@ def between(left,right,s):
     a,_,after = a.partition(right)
     return a
 
-def send_email(address, subject, message):
+def send_email(smtp_address, smtp_username, smtp_password, address, subject, message):
     """sends an email using the gmail account info specifed in config"""
-    send_info = "From: %s\nTo: %s\nSubject: %s\nX-Mailer: My-Mail\n\n" % (config.EMAIL_USERNAME, address, subject)
+    send_info = "From: %s\nTo: %s\nSubject: %s\nX-Mailer: My-Mail\n\n" % (address_from, address, subject)
 
-    server = smtplib.SMTP(config.EMAIL_SMTP_ADDRESS)
+    server = smtplib.SMTP(smtp_address)
     server.starttls()
-    server.login(config.EMAIL_USERNAME, config.EMAIL_PASSWORD)
-    server.sendmail(config.EMAIL_USERNAME, address, send_info + message)
+    server.login(smtp_username, smtp_password)
+    server.sendmail(address_from, address, send_info + message)
     server.quit()
 
 def find_page_part(page_list, regex, before, after):
