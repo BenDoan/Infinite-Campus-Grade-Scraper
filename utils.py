@@ -1,6 +1,7 @@
 import csv
 import re
 import smtplib
+import os.path
 
 def is_regex_in_string(regex, regex_string):
     """checks if a regex match is in string
@@ -53,6 +54,9 @@ def find_page_part(page_list, regex, before, after):
 def read_csv(file_name):
     """reads a csv file and returns it as a list of lists"""
     final_list = []
+    if not os.path.isfile(file_name):
+        with open(file_name, 'w+'):
+            pass
     reader = csv.reader(open(file_name, 'rb'), delimiter=',')
     for x in reader:
         final_list.append(x)

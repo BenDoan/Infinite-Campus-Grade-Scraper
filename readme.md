@@ -2,8 +2,7 @@ This script scrapes grades from Infinite Campus and stores them in a data file.
 
 INSTALL
 =======
-* Remove the underscores from _config.py and _data.csv
-* Fill in the required fields in config.py
+* Remove the underscore from "_config.py" and fill in the required data
 * Install the "mechanize" and "BeautifulSoup" python modules
 
 Caveats

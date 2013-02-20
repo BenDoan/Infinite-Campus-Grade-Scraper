@@ -100,7 +100,7 @@ def diff_grade(grade, class_name):
                     return diff
             else:
                 got_first = True
-    return diff
+    return 0.0
 
 def get_class_links():
     """loops through the links in the schedule page
