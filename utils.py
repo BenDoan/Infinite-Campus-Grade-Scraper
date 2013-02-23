@@ -69,3 +69,22 @@ def add_to_csv(file_name, single_list):
     final_list.append(single_list)
     for x in final_list:
         writer.writerow(x)
+
+def get_config(section):
+    """returns a list of config options in the provided sections
+    requires that config is initialized"""
+    if not Config:
+        return "Config not found"
+    dict1 = {}
+    options = Config.options(section)
+    for option in options:
+        try:
+            dict1[option] = Config.get(section, option)
+            if dict1[option] == -1:
+                print("skip: %s" % option)
+        except:
+            print("exception on %s!" % option)
+            dict1[option] = None
+    return dict1
+
+

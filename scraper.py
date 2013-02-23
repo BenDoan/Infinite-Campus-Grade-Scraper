@@ -6,13 +6,18 @@
 import cookielib
 import mechanize
 import string
+import ConfigParser
 
 from BeautifulSoup import BeautifulSoup
 from datetime import date, timedelta
 from optparse import OptionParser
 
-import config
 from utils import *
+
+br = mechanize.Browser()
+date = date.today()
+Config = ConfigParser.ConfigParser()
+Config.read('config.ini')
 
 parser = OptionParser(description="A script to scrape grades from an infinite campus website")
 parser.add_option("-p", "--print", action="store_true", dest="print_results",
@@ -28,9 +33,6 @@ try:
 except SystemExit, e:
     options = None
 
-br = mechanize.Browser()
-date = date.today()
-
 class Class:
     """an object for an individual class, contains a grade and class name"""
     grade = 0
@@ -41,17 +43,17 @@ class Class:
 
     def get_letter_grade(self):
         """returns the letter equivalent of the class's grade"""
-        ap = True if config.USE_AP_SCALING and "AP" in self.name else False
+        ap = True if bool(get_config('Grades')['use_ap_scaling']) and "AP" in self.name else False
         float_grade = float(self.grade)
-        if ap and config.USE_AP_SCALING and float_grade >= config.A_CUTOFF:
+        if ap and bool(get_config('Grades')['use_ap_scaling']) and float_grade >= float(get_config('Grades')['a_cutoff']):
             return "A+"
-        elif (ap and float_grade >= config.B_CUTOFF) or float_grade >= config.A_CUTOFF:
+        elif (ap and float_grade >= float(get_config('Grades')['b_cutoff'])) or float_grade >= float(get_config('Grades')['a_cutoff']):
             return "A"
-        elif (ap and float_grade >= config.C_CUTOFF) or float_grade >= config.B_CUTOFF:
+        elif (ap and float_grade >= float(get_config('Grades')['c_cutoff'])) or float_grade >= float(get_config('Grades')['b_cutoff']):
             return "B"
-        elif float_grade >= config.C_CUTOFF:
+        elif float_grade >= float(get_config('Grades')['c_cutoff']):
             return "C"
-        elif float_grade >= config.D_CUTOFF:
+        elif float_grade >= float(get_config('Grades')['d_cutoff']):
             return "D"
         else:
             return "F"
@@ -106,7 +108,7 @@ def get_class_links():
     """loops through the links in the schedule page
     and adds the grade page links to the link_list array
     """
-    r = br.open(config.SCHEDULE_URL) #opens schdule page
+    r = br.open(get_config('Infinite Campus')['schedule_page_url']) #opens schdule page
     soup = BeautifulSoup(r)
     table = soup.find("table", cellpadding=2, bgcolor="#A0A0A0")
     link_list = []
@@ -135,7 +137,7 @@ def get_grades():
     grades = []
     class_links = get_class_links()
     term = get_term(class_links)
-    base_url = config.LOGIN_URL.split("/campus")[0] + '/campus/'
+    base_url = get_config('Infinite Campus')['login_url'].split("/campus")[0] + '/campus/'
     for link in enumerate(class_links[term:]):
         if link[0] % 4 == 0:
             if link[1] is not None:
@@ -154,10 +156,10 @@ def login():
     """Logs in to the Infinite Campus at the
     address specified in the config
     """
-    br.open(config.LOGIN_URL)
+    br.open(get_config('Infinite Campus')['login_url'])
     br.select_form(nr=0)
-    br.form['username'] = config.USERNAME
-    br.form['password'] = config.PASSWORD
+    br.form['username'] = get_config('Authentication')['username']
+    br.form['password'] = get_config('Authentication')['password']
     br.submit()
 
 
@@ -193,7 +195,6 @@ def get_weekly_report(grades):
         final_grade_string = "*************************\nNo data from one week ago\n*************************\n"
     return final_grade_string
 
-
 def main():
     setup()
     login()
@@ -209,6 +210,6 @@ def main():
         if options.print_results:
             print final_grade_string
         if options.email:
-            send_email(config.EMAIL_SMTP_ADDRESS, config.EMAIL_USERNAME, config.EMAIL_PASSWORD, config.RECEIVING_EMAIL, "Grades", final_grade_string)
+            send_email(get_config('Email')['smtp_address'], get_config('Email')['username'], get_config('Email')['password'], get_config('Email')['receiving_email'], "Grades", final_grade_string)
 
 main()
