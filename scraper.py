@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-#to schedule in windows:
-#schtasks /Create /SC DAILY /TN PythonTask /TR "PATH_TO_PYTHON_EXE PATH_TO_PYTHON_SCRIPT"
-
 import cookielib
 import mechanize
 import string
@@ -12,7 +9,7 @@ from BeautifulSoup import BeautifulSoup
 from datetime import date, timedelta
 from optparse import OptionParser
 
-from utils import *
+import utils
 
 br = mechanize.Browser()
 date = date.today()
@@ -79,7 +76,7 @@ def setup():
 def diff_grade_weekly(grade, class_name, date):
     """returns the difference between the current class grade and the grade from one week ago"""
     diff = ""
-    for line in read_csv('data.csv')[::-1]:
+    for line in utils.read_csv('data.csv')[::-1]:
         if line[0] == class_name and line[2] == str(date):
             diff = float(line[1]) - float(grade)
             if diff > 0:
@@ -89,10 +86,12 @@ def diff_grade_weekly(grade, class_name, date):
     return diff
 
 def diff_grade(grade, class_name):
-    """returns the difference between the current class grade and the last one"""
+    """returns the difference between the current class grade
+    and the last one
+    """
     diff = ""
     got_first = False #we need to skip the grade we just added
-    for line in read_csv('data.csv')[::-1]:
+    for line in utils.read_csv('data.csv')[::-1]:
         if line[0] == class_name:
             if got_first:
                 diff = float(line[1]) - float(grade)
@@ -142,8 +141,8 @@ def get_grades():
         if link[0] % 4 == 0:
             if link[1] is not None:
                 page = br.open(base_url + link[1]).readlines()
-                grade = find_page_part(page, r'grayText', '<span class="grayText">', '%</span>')
-                course_name = find_page_part(page, r'gridTitle', '<div class="gridTitle">', '</div>').rstrip()
+                grade = utils.find_page_part(page, r'grayText', '<span class="grayText">', '%</span>')
+                course_name = utils.find_page_part(page, r'gridTitle', '<div class="gridTitle">', '</div>').rstrip()
                 course_name = string.replace(course_name, '&amp;', '&')
 
                 if grade is not None:
@@ -169,7 +168,7 @@ def add_to_grades_database(grades):
     """
     for c in grades:
         if c.name != "":
-            add_to_csv('data.csv', [c.name,c.grade,date])
+            utils.add_to_csv('data.csv', [c.name, c.grade, date])
 
 def get_grade_string(grades):
     """Extracts the grade_string, calculates the diff from
@@ -179,7 +178,7 @@ def get_grade_string(grades):
     for c in grades:
         letter_grade = c.get_letter_grade()
         diff = diff_grade(c.grade, c.name)
-        final_grade_string += letter_grade + " - " + c.grade + '% - ' + c.name + " (diff: " + str(diff) + "%)" + '\n';
+        final_grade_string += "%s - %s%% - %s (diff: %r)\n" % (letter_grade, c.grade, c.name, diff)
     return final_grade_string
 
 def get_weekly_report(grades):
@@ -190,10 +189,26 @@ def get_weekly_report(grades):
             letter_grade = c.get_letter_grade()
             diff = diff_grade_weekly(c.grade, c.name, date-timedelta(days=7))
             if diff != "":
-                final_grade_string += letter_grade + " - " + c.grade + '% - ' + c.name + " (weekly diff: " + str(diff) + "%)" + '\n';
+                final_grade_string += "%s - %s%% - %s (weekly diff: %r)\n" % (letter_grade, c.grade, c.name, diff)
     if final_grade_string == "":
         final_grade_string = "*************************\nNo data from one week ago\n*************************\n"
     return final_grade_string
+
+def get_config(section):
+    """returns a list of config options in the provided sections
+    requires that config is initialized"""
+    if not Config:
+        return "Config not found"
+    dict1 = {}
+    for opt in Config.options(section):
+        try:
+            dict1[opt] = Config.get(section, opt)
+            if dict1[opt] == -1:
+                print("skip: %s" % opt)
+        except Exception:
+            print("exception on %s!" % opt)
+            dict1[opt] = None
+    return dict1
 
 def main():
     setup()
@@ -210,6 +225,10 @@ def main():
         if options.print_results:
             print final_grade_string
         if options.email:
-            send_email(get_config('Email')['smtp_address'], get_config('Email')['username'], get_config('Email')['password'], get_config('Email')['receiving_email'], "Grades", final_grade_string)
+            utils.send_email(get_config('Email')['smtp_address'],
+                    get_config('Email')['username'],
+                    get_config('Email')['password'],
+                    get_config('Email')['receiving_email'],
+                    "Grades", final_grade_string)
 
 main()

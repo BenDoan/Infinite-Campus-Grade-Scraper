@@ -1,7 +1,7 @@
 import csv
+import os.path
 import re
 import smtplib
-import os.path
 
 def is_regex_in_string(regex, regex_string):
     """checks if a regex match is in string
@@ -15,7 +15,7 @@ def is_regex_in_string(regex, regex_string):
         match = re.search(regex, regex_string)
         match.group()
         return True;
-    except Exception:
+    except AttributeError:
         return False;
 
 def between(left,right,s):
@@ -30,7 +30,7 @@ def between(left,right,s):
 
 def send_email(smtp_address, smtp_username, smtp_password, address, subject, message):
     """sends an email using the gmail account info specifed in config"""
-    send_info = "From: %s\nTo: %s\nSubject: %s\nX-Mailer: My-Mail\n\n" % (smtp_address, address, subject)
+    send_info = "From: %s\nTo: %s\nSubject: %s\nX-Mailer: My-Mail\n\n" % (smtp_username, address, subject)
 
     server = smtplib.SMTP(smtp_address)
     server.starttls()
@@ -69,22 +69,5 @@ def add_to_csv(file_name, single_list):
     final_list.append(single_list)
     for x in final_list:
         writer.writerow(x)
-
-def get_config(section):
-    """returns a list of config options in the provided sections
-    requires that config is initialized"""
-    if not Config:
-        return "Config not found"
-    dict1 = {}
-    options = Config.options(section)
-    for option in options:
-        try:
-            dict1[option] = Config.get(section, option)
-            if dict1[option] == -1:
-                print("skip: %s" % option)
-        except:
-            print("exception on %s!" % option)
-            dict1[option] = None
-    return dict1
 
 
