@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 
+import ConfigParser
 import cookielib
 import mechanize
 import string
-import ConfigParser
+import urllib
+import urlparse
 
 from BeautifulSoup import BeautifulSoup
 from datetime import date, timedelta
 from optparse import OptionParser
+from xml.dom import minidom
 
 import utils
 
@@ -103,11 +106,44 @@ def diff_grade(grade, class_name):
                 got_first = True
     return 0.0
 
+def get_base_url():
+    """returns the site's base url, taken from the login page url"""
+    return get_config('Authentication')['login_url'].split("/campus")[0] + '/campus/'
+
+def url_fix(s, charset='utf-8'):
+    """fixes spaces and query strings in urls, borrowed from werkzeug"""
+    if isinstance(s, unicode):
+        s = s.encode(charset, 'ignore')
+    scheme, netloc, path, qs, anchor = urlparse.urlsplit(s)
+    path = urllib.quote(path, '/%')
+    qs = urllib.quote_plus(qs, ':&=')
+    return urlparse.urlunsplit((scheme, netloc, path, qs, anchor))
+
+def get_schedule_page_url():
+    """returns the url of the schedule page"""
+    school_data = br.open(get_base_url() + "portal/portalOutlineWrapper.xsl?x=portal.PortalOutline&contentType=text/xml&lang=en")
+    dom = minidom.parse(school_data)
+
+    node = dom.getElementsByTagName("Student")[0]
+    person_id = node.getAttribute('personID')
+    first_name = node.getAttribute('firstName')
+    last_name = node.getAttribute('lastName')
+
+    node = dom.getElementsByTagName("Calendar")[0]
+    school_id = node.getAttribute('schoolID')
+
+    node = dom.getElementsByTagName("ScheduleStructure")[0]
+    calendar_id = node.getAttribute('calendarID')
+    structure_id = node.getAttribute('structureID')
+    calendar_name = node.getAttribute('calendarName')
+
+    return url_fix(get_base_url() + u"portal/portal.xsl?x=portal.PortalOutline&lang=en&personID=%s&studentFirstName=%s&lastName=%s&firstName=%s&schoolID=%s&calendarID=%s&structureID=%s&calendarName=%s&mode=schedule&x=portal.PortalSchedule&x=resource.PortalOptions" % (person_id, first_name, last_name, first_name, school_id, calendar_id, structure_id, calendar_name))
+
 def get_class_links():
     """loops through the links in the schedule page
     and adds the grade page links to the link_list array
     """
-    r = br.open(get_config('Infinite Campus')['schedule_page_url']) #opens schdule page
+    r = br.open(get_schedule_page_url()) #opens schdule page
     soup = BeautifulSoup(r)
     table = soup.find("table", cellpadding=2, bgcolor="#A0A0A0")
     link_list = []
@@ -136,7 +172,7 @@ def get_grades():
     grades = []
     class_links = get_class_links()
     term = get_term(class_links)
-    base_url = get_config('Infinite Campus')['login_url'].split("/campus")[0] + '/campus/'
+    base_url = get_base_url()
     for link in enumerate(class_links[term:]):
         if link[0] % 4 == 0:
             if link[1] is not None:
@@ -155,7 +191,7 @@ def login():
     """Logs in to the Infinite Campus at the
     address specified in the config
     """
-    br.open(get_config('Infinite Campus')['login_url'])
+    br.open(get_config('Authentication')['login_url'])
     br.select_form(nr=0)
     br.form['username'] = get_config('Authentication')['username']
     br.form['password'] = get_config('Authentication')['password']
