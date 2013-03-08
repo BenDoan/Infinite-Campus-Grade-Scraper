@@ -6,6 +6,7 @@ import mechanize
 import string
 import urllib
 import urlparse
+import eventlet
 
 from BeautifulSoup import BeautifulSoup
 from datetime import date, timedelta
@@ -164,6 +165,14 @@ def get_term(class_links):
             term = class_link[0]
     return term
 
+def parse_page(url):
+    """parses the class page at the provided url and returns a Class object for it"""
+    page = br.open(get_base_url() + url).readlines()
+    grade = utils.find_page_part(page, r'grayText', '<span class="grayText">', '%</span>')
+    course_name = utils.find_page_part(page, r'gridTitle', '<div class="gridTitle">', '</div>').rstrip()
+    course_name = string.replace(course_name, '&amp;', '&')
+    return Class(course_name, grade)
+
 def get_grades():
     """opens all pages in the link_list array and adds
     the last grade percentage and the corresponding class name
@@ -172,19 +181,10 @@ def get_grades():
     grades = []
     class_links = get_class_links()
     term = get_term(class_links)
-    base_url = get_base_url()
     for link in enumerate(class_links[term:]):
-        if link[0] % 4 == 0:
-            if link[1] is not None:
-                page = br.open(base_url + link[1]).readlines()
-                grade = utils.find_page_part(page, r'grayText', '<span class="grayText">', '%</span>')
-                course_name = utils.find_page_part(page, r'gridTitle', '<div class="gridTitle">', '</div>').rstrip()
-                course_name = string.replace(course_name, '&amp;', '&')
+        if link[0] % 4 == 0 and link[1] is not None:
 
-                if grade is not None:
-                    grades.append(Class(course_name, grade))
-                else:
-                    grades.append(Class(course_name, None))
+            grades.append(parse_page(link[1]))
     return grades
 
 def login():
