@@ -89,7 +89,7 @@ def diff_grade(grade, class_name):
     and the last one
     """
     diff = ""
-    got_first = False #we need to skip the grade we just added
+    got_first = False #we need to skip the grade we just added to the database
     for line in utils.read_csv('data.csv')[::-1]:
         if line[0] == class_name:
             if got_first:
@@ -169,9 +169,10 @@ def get_term(class_links):
 
 def parse_page(url):
     """parses the class page at the provided url and returns a Class object for it"""
-    page = br.open(get_base_url() + url).readlines()
-    grade = utils.find_page_part(page, r'grayText', '<span class="grayText">', '%</span>')
-    course_name = utils.find_page_part(page, r'gridTitle', '<div class="gridTitle">', '</div>').rstrip()
+    page = br.open(get_base_url() + url)
+    soup = BeautifulSoup(page)
+    grade = float(soup.findAll(name="a", attrs={'class':"gridPartOfTermGPA"}, limit=1)[0].span.string[:-2])
+    course_name = soup.findAll(name="div", attrs={'class':"gridTitle"}, limit=1)[0].string
     course_name = string.replace(course_name, '&amp;', '&')
     return Class(course_name, grade)
 
