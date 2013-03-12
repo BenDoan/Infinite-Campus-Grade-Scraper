@@ -6,7 +6,6 @@ import mechanize
 import string
 import urllib
 import urlparse
-import eventlet
 
 from BeautifulSoup import BeautifulSoup
 from datetime import date, timedelta
@@ -28,11 +27,7 @@ parser.add_option("-e", "--email", action="store_true", dest="email",
 parser.add_option("-w", "--weekly", action="store_true", dest="weekly",
         help="diffs using the grades from a week ago")
 
-#allows for testing
-try:
-    (options, args) = parser.parse_args()
-except SystemExit, e:
-    options = None
+(options, args) = parser.parse_args()
 
 class Class:
     """an object for an individual class, contains a grade and class name"""
@@ -77,8 +72,8 @@ def setup():
     # User-Agent
     br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
 
-def diff_grade_weekly(grade, class_name, date):
-    """returns the difference between the current class grade and the grade from one week ago"""
+def diff_grade_custom(grade, class_name, date):
+    """returns the difference between the current class grade and the grade from the provided date"""
     diff = ""
     for line in utils.read_csv('data.csv')[::-1]:
         if line[0] == class_name and line[2] == str(date):
@@ -138,7 +133,14 @@ def get_schedule_page_url():
     structure_id = node.getAttribute('structureID')
     calendar_name = node.getAttribute('calendarName')
 
-    return url_fix(get_base_url() + u"portal/portal.xsl?x=portal.PortalOutline&lang=en&personID=%s&studentFirstName=%s&lastName=%s&firstName=%s&schoolID=%s&calendarID=%s&structureID=%s&calendarName=%s&mode=schedule&x=portal.PortalSchedule&x=resource.PortalOptions" % (person_id, first_name, last_name, first_name, school_id, calendar_id, structure_id, calendar_name))
+    return url_fix(get_base_url() + u"portal/portal.xsl?x=portal.PortalOutline&lang=en&personID=%s&studentFirstName=%s&lastName=%s&firstName=%s&schoolID=%s&calendarID=%s&structureID=%s&calendarName=%s&mode=schedule&x=portal.PortalSchedule&x=resource.PortalOptions" % (person_id,
+                                                                    first_name,
+                                                                    last_name,
+                                                                    first_name,
+                                                                    school_id,
+                                                                    calendar_id,
+                                                                    structure_id,
+                                                                    calendar_name))
 
 def get_class_links():
     """loops through the links in the schedule page
@@ -192,7 +194,7 @@ def login():
     address specified in the config
     """
     br.open(get_config('Authentication')['login_url'])
-    br.select_form(nr=0)
+    br.select_form(nr=0) #select the first form
     br.form['username'] = get_config('Authentication')['username']
     br.form['password'] = get_config('Authentication')['password']
     br.submit()
@@ -214,7 +216,10 @@ def get_grade_string(grades):
     for c in grades:
         letter_grade = c.get_letter_grade()
         diff = diff_grade(c.grade, c.name)
-        final_grade_string += "%s - %s%% - %s (diff: %r)\n" % (letter_grade, c.grade, c.name, diff)
+        final_grade_string += "%s - %s%% - %s (diff: %r)\n" % (letter_grade,
+                                                                c.grade,
+                                                                c.name,
+                                                                round(float(diff), 2))
     return final_grade_string
 
 def get_weekly_report(grades):
@@ -223,9 +228,12 @@ def get_weekly_report(grades):
     for c in grades:
         if c.grade != "":
             letter_grade = c.get_letter_grade()
-            diff = diff_grade_weekly(c.grade, c.name, date-timedelta(days=7))
+            diff = diff_grade_custom(c.grade, c.name, date-timedelta(days=7))
             if diff != "":
-                final_grade_string += "%s - %s%% - %s (weekly diff: %r)\n" % (letter_grade, c.grade, c.name, diff)
+                final_grade_string += "%s - %s%% - %s (weekly diff: %r)\n" % (letter_grade,
+                                                                                c.grade,
+                                                                                c.name,
+                                                                                round(float(diff), 2))
     if final_grade_string == "":
         final_grade_string = "*************************\nNo data from one week ago\n*************************\n"
     return final_grade_string
@@ -267,4 +275,5 @@ def main():
                     get_config('Email')['receiving_email'],
                     "Grades", final_grade_string)
 
-main()
+if __name__ == "__main__":
+    main()
