@@ -116,7 +116,9 @@ def url_fix(s, charset='utf-8'):
     return urlparse.urlunsplit((scheme, netloc, path, qs, anchor))
 
 def get_schedule_page_url():
-    """returns the url of the schedule page"""
+    """returns the url of the schedule page by constructing
+    it from the permissions xml file
+    """
     school_data = br.open(get_base_url() + "portal/portalOutlineWrapper.xsl?x=portal.PortalOutline&contentType=text/xml&lang=en")
     dom = minidom.parse(school_data)
 
@@ -133,7 +135,7 @@ def get_schedule_page_url():
     structure_id = node.getAttribute('structureID')
     calendar_name = node.getAttribute('calendarName')
 
-    return url_fix(get_base_url() + u"portal/portal.xsl?x=portal.PortalOutline&lang=en&personID=%s&studentFirstName=%s&lastName=%s&firstName=%s&schoolID=%s&calendarID=%s&structureID=%s&calendarName=%s&mode=schedule&x=portal.PortalSchedule&x=resource.PortalOptions" % (person_id,
+    return url_fix(get_base_url() + u"portal/portal.xsl?x=portal.PortalOutline&lang=en&personID={}&studentFirstName={}&lastName={}&firstName={}&schoolID={}&calendarID={}&structureID={}&calendarName={}&mode=schedule&x=portal.PortalSchedule&x=resource.PortalOptions".format(person_id,
                                                                     first_name,
                                                                     last_name,
                                                                     first_name,
@@ -185,7 +187,6 @@ def get_grades():
     term = get_term(class_links)
     for link in enumerate(class_links[term:]):
         if link[0] % 4 == 0 and link[1] is not None:
-
             grades.append(parse_page(link[1]))
     return grades
 
@@ -216,7 +217,7 @@ def get_grade_string(grades):
     for c in grades:
         letter_grade = c.get_letter_grade()
         diff = diff_grade(c.grade, c.name)
-        final_grade_string += "%s - %s%% - %s (diff: %r)\n" % (letter_grade,
+        final_grade_string += "{} - {}% - {} (diff: {}%)\n".format(letter_grade,
                                                                 c.grade,
                                                                 c.name,
                                                                 round(float(diff), 2))
@@ -230,7 +231,7 @@ def get_weekly_report(grades):
             letter_grade = c.get_letter_grade()
             diff = diff_grade_custom(c.grade, c.name, date-timedelta(days=7))
             if diff != "":
-                final_grade_string += "%s - %s%% - %s (weekly diff: %r)\n" % (letter_grade,
+                final_grade_string += "{} - {}% - {} (weekly diff: %r)\n".format(letter_grade,
                                                                                 c.grade,
                                                                                 c.name,
                                                                                 round(float(diff), 2))
