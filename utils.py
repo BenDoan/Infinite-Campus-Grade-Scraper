@@ -2,6 +2,8 @@ import csv
 import os.path
 import re
 import smtplib
+import urlparse
+import urllib
 
 def is_regex_in_string(regex, regex_string):
     """checks if a regex match is in string
@@ -70,4 +72,11 @@ def add_to_csv(file_name, single_list):
     for x in final_list:
         writer.writerow(x)
 
-
+def url_fix(s, charset='utf-8'):
+    """fixes spaces and query strings in urls, borrowed from werkzeug"""
+    if isinstance(s, unicode):
+        s = s.encode(charset, 'ignore')
+    scheme, netloc, path, qs, anchor = urlparse.urlsplit(s)
+    path = urllib.quote(path, '/%')
+    qs = urllib.quote_plus(qs, ':&=')
+    return urlparse.urlunsplit((scheme, netloc, path, qs, anchor))

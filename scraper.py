@@ -4,8 +4,6 @@ import ConfigParser
 import cookielib
 import mechanize
 import string
-import urllib
-import urlparse
 
 from BeautifulSoup import BeautifulSoup
 from datetime import date, timedelta
@@ -106,14 +104,6 @@ def get_base_url():
     """returns the site's base url, taken from the login page url"""
     return get_config('Authentication')['login_url'].split("/campus")[0] + '/campus/'
 
-def url_fix(s, charset='utf-8'):
-    """fixes spaces and query strings in urls, borrowed from werkzeug"""
-    if isinstance(s, unicode):
-        s = s.encode(charset, 'ignore')
-    scheme, netloc, path, qs, anchor = urlparse.urlsplit(s)
-    path = urllib.quote(path, '/%')
-    qs = urllib.quote_plus(qs, ':&=')
-    return urlparse.urlunsplit((scheme, netloc, path, qs, anchor))
 
 def get_schedule_page_url():
     """returns the url of the schedule page by constructing
@@ -135,7 +125,8 @@ def get_schedule_page_url():
     structure_id = node.getAttribute('structureID')
     calendar_name = node.getAttribute('calendarName')
 
-    return url_fix(get_base_url() + u"portal/portal.xsl?x=portal.PortalOutline&lang=en&personID={}&studentFirstName={}&lastName={}&firstName={}&schoolID={}&calendarID={}&structureID={}&calendarName={}&mode=schedule&x=portal.PortalSchedule&x=resource.PortalOptions".format(person_id,
+    return utils.url_fix(get_base_url() + u"portal/portal.xsl?x=portal.PortalOutline&lang=en&personID={}&studentFirstName={}&lastName={}&firstName={}&schoolID={}&calendarID={}&structureID={}&calendarName={}&mode=schedule&x=portal.PortalSchedule&x=resource.PortalOptions".format(
+                                                                    person_id,
                                                                     first_name,
                                                                     last_name,
                                                                     first_name,
@@ -154,11 +145,10 @@ def get_class_links():
     link_list = []
     for row in table.findAll("tr")[1:6]:
         for col in row.findAll('td'):
-            link = col.find('a')['href']
+            link = get_base_url() + col.find('a')['href']
             if "mailto" in link:
                 link = None
             link_list.append(link)
-
     return link_list
 
 def get_term(class_links):
@@ -171,7 +161,7 @@ def get_term(class_links):
 
 def parse_page(url):
     """parses the class page at the provided url and returns a Class object for it"""
-    page = br.open(get_base_url() + url).readlines()
+    page = br.open(url).readlines()
     grade = utils.find_page_part(page, r'grayText', '<span class="grayText">', '%</span>')
     course_name = utils.find_page_part(page, r'gridTitle', '<div class="gridTitle">', '</div>').rstrip()
     course_name = string.replace(course_name, '&amp;', '&')
