@@ -4,8 +4,6 @@ import ConfigParser
 import cookielib
 import mechanize
 import string
-import urllib
-import urlparse
 
 from BeautifulSoup import BeautifulSoup
 from datetime import date, timedelta
@@ -105,15 +103,6 @@ def diff_grade(grade, class_name):
 def get_base_url():
     """returns the site's base url, taken from the login page url"""
     return get_config('Authentication')['login_url'].split("/campus")[0] + '/campus/'
-
-def url_fix(s, charset='utf-8'):
-    """fixes spaces and query strings in urls, borrowed from werkzeug"""
-    if isinstance(s, unicode):
-        s = s.encode(charset, 'ignore')
-    scheme, netloc, path, qs, anchor = urlparse.urlsplit(s)
-    path = urllib.quote(path, '/%')
-    qs = urllib.quote_plus(qs, ':&=')
-    return urlparse.urlunsplit((scheme, netloc, path, qs, anchor))
 
 def get_schedule_page_url():
     """returns the url of the schedule page"""
