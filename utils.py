@@ -2,33 +2,7 @@ import csv
 import os.path
 import re
 import smtplib
-import urlparse
-import urllib
 
-def is_regex_in_string(regex, regex_string):
-    """checks if a regex match is in string
-
-    >>> is_regex_in_string(r'333', 'jaskljds3aksdlja33313d')
-    True
-    >>> is_regex_in_string(r'434', 'sdlkfnhds43asdasd')
-    False
-    """
-    try:
-        match = re.search(regex, regex_string)
-        match.group()
-        return True;
-    except AttributeError:
-        return False;
-
-def between(left,right,s):
-    """searches for text between left and right
-
-    >>> between('tfs', 'gsa', 'tfsaskdfnsdlkfjkldsfjgsa')
-    'askdfnsdlkfjkldsfj'
-    """
-    before,_,a = s.partition(left)
-    a,_,after = a.partition(right)
-    return a
 
 def send_email(smtp_address, smtp_username, smtp_password, address, subject, message):
     """sends an email using the gmail account info specifed in config"""
@@ -39,19 +13,6 @@ def send_email(smtp_address, smtp_username, smtp_password, address, subject, mes
     server.login(smtp_username, smtp_password)
     server.sendmail(smtp_address, address, send_info + message)
     server.quit()
-
-def find_page_part(page_list, regex, before, after):
-    """returns the text in between before and after,
-    in the first line containg regex
-
-    >>> find_page_part(('abc','ahd'),r'abc','a','c')
-    'b'
-    """
-    toReturn = ""
-    for x in page_list:
-        if is_regex_in_string(regex, x):
-            toReturn = between(before, after, x)
-    return toReturn
 
 def read_csv(file_name):
     """reads a csv file and returns it as a list of lists"""
@@ -72,11 +33,4 @@ def add_to_csv(file_name, single_list):
     for x in final_list:
         writer.writerow(x)
 
-def url_fix(s, charset='utf-8'):
-    """fixes spaces and query strings in urls, borrowed from werkzeug"""
-    if isinstance(s, unicode):
-        s = s.encode(charset, 'ignore')
-    scheme, netloc, path, qs, anchor = urlparse.urlsplit(s)
-    path = urllib.quote(path, '/%')
-    qs = urllib.quote_plus(qs, ':&=')
-    return urlparse.urlunsplit((scheme, netloc, path, qs, anchor))
+

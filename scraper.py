@@ -4,6 +4,8 @@ import ConfigParser
 import cookielib
 import mechanize
 import string
+import urllib
+import urlparse
 
 from BeautifulSoup import BeautifulSoup
 from datetime import date, timedelta
@@ -17,40 +19,40 @@ date = date.today()
 Config = ConfigParser.ConfigParser()
 Config.read('config.ini')
 
-parser = OptionParser(description="A script to scrape grades from an infinite campus website")
-parser.add_option("-p", "--print", action="store_true", dest="print_results",
-        help="prints the grade report to stdout")
-parser.add_option("-e", "--email", action="store_true", dest="email",
-        help="email the grade report to user")
-parser.add_option("-w", "--weekly", action="store_true", dest="weekly",
-        help="diffs using the grades from a week ago")
+parser = OptionParser(description='A script to scrape grades from an infinite campus website')
+parser.add_option('-p', '--print', action='store_true', dest='print_results',
+        help='prints the grade report to stdout')
+parser.add_option('-e', '--email', action='store_true', dest='email',
+        help='email the grade report to user')
+parser.add_option('-w', '--weekly', action='store_true', dest='weekly',
+        help='diffs using the grades from a week ago')
 
 (options, args) = parser.parse_args()
 
 class Class:
     """an object for an individual class, contains a grade and class name"""
     grade = 0
-    name = ""
+    name = ''
     def __init__(self, name, grade):
         self.grade = grade
         self.name = name
 
     def get_letter_grade(self):
         """returns the letter equivalent of the class's grade"""
-        ap = True if bool(get_config('Grades')['use_ap_scaling']) and "AP" in self.name else False
+        ap = True if bool(get_config('Grades')['use_ap_scaling']) and 'AP' in self.name else False
         float_grade = float(self.grade)
         if ap and bool(get_config('Grades')['use_ap_scaling']) and float_grade >= float(get_config('Grades')['a_cutoff']):
-            return "A+"
+            return 'A+'
         elif (ap and float_grade >= float(get_config('Grades')['b_cutoff'])) or float_grade >= float(get_config('Grades')['a_cutoff']):
-            return "A"
+            return 'A'
         elif (ap and float_grade >= float(get_config('Grades')['c_cutoff'])) or float_grade >= float(get_config('Grades')['b_cutoff']):
-            return "B"
+            return 'B'
         elif float_grade >= float(get_config('Grades')['c_cutoff']):
-            return "C"
+            return 'C'
         elif float_grade >= float(get_config('Grades')['d_cutoff']):
-            return "D"
+            return 'D'
         else:
-            return "F"
+            return 'F'
 
 def setup():
     """general setup commands"""
@@ -72,12 +74,12 @@ def setup():
 
 def diff_grade_custom(grade, class_name, date):
     """returns the difference between the current class grade and the grade from the provided date"""
-    diff = ""
+    diff = ''
     for line in utils.read_csv('data.csv')[::-1]:
         if line[0] == class_name and line[2] == str(date):
             diff = float(line[1]) - float(grade)
             if diff > 0:
-                return "+" + str(diff)
+                return '+' + str(diff)
             else:
                 return diff
     return diff
@@ -86,8 +88,8 @@ def diff_grade(grade, class_name):
     """returns the difference between the current class grade
     and the last one
     """
-    diff = ""
-    got_first = False #we need to skip the grade we just added
+    diff = ''
+    got_first = False #we need to skip the grade we just added to the database
     for line in utils.read_csv('data.csv')[::-1]:
         if line[0] == class_name:
             if got_first:
@@ -104,23 +106,29 @@ def get_base_url():
     """returns the site's base url, taken from the login page url"""
     return get_config('Authentication')['login_url'].split("/campus")[0] + '/campus/'
 
+def url_fix(s, charset='utf-8'):
+    """fixes spaces and query strings in urls, borrowed from werkzeug"""
+    if isinstance(s, unicode):
+        s = s.encode(charset, 'ignore')
+    scheme, netloc, path, qs, anchor = urlparse.urlsplit(s)
+    path = urllib.quote(path, '/%')
+    qs = urllib.quote_plus(qs, ':&=')
+    return urlparse.urlunsplit((scheme, netloc, path, qs, anchor))
 
 def get_schedule_page_url():
-    """returns the url of the schedule page by constructing
-    it from the permissions xml file
-    """
-    school_data = br.open(get_base_url() + "portal/portalOutlineWrapper.xsl?x=portal.PortalOutline&contentType=text/xml&lang=en")
+    """returns the url of the schedule page"""
+    school_data = br.open(get_base_url() + 'portal/portalOutlineWrapper.xsl?x=portal.PortalOutline&contentType=text/xml&lang=en')
     dom = minidom.parse(school_data)
 
-    node = dom.getElementsByTagName("Student")[0]
+    node = dom.getElementsByTagName('Student')[0]
     person_id = node.getAttribute('personID')
     first_name = node.getAttribute('firstName')
     last_name = node.getAttribute('lastName')
 
-    node = dom.getElementsByTagName("Calendar")[0]
+    node = dom.getElementsByTagName('Calendar')[0]
     school_id = node.getAttribute('schoolID')
 
-    node = dom.getElementsByTagName("ScheduleStructure")[0]
+    node = dom.getElementsByTagName('ScheduleStructure')[0]
     calendar_id = node.getAttribute('calendarID')
     structure_id = node.getAttribute('structureID')
     calendar_name = node.getAttribute('calendarName')
@@ -141,14 +149,15 @@ def get_class_links():
     """
     r = br.open(get_schedule_page_url()) #opens schdule page
     soup = BeautifulSoup(r)
-    table = soup.find("table", cellpadding=2, bgcolor="#A0A0A0")
+    table = soup.find('table', cellpadding=2, bgcolor='#A0A0A0')
     link_list = []
-    for row in table.findAll("tr")[1:6]:
+    for row in table.findAll('tr')[1:6]:
         for col in row.findAll('td'):
-            link = get_base_url() + col.find('a')['href']
-            if "mailto" in link:
+            link = col.find('a')['href']
+            if 'mailto' in link:
                 link = None
             link_list.append(link)
+
     return link_list
 
 def get_term(class_links):
@@ -161,9 +170,10 @@ def get_term(class_links):
 
 def parse_page(url):
     """parses the class page at the provided url and returns a Class object for it"""
-    page = br.open(url).readlines()
-    grade = utils.find_page_part(page, r'grayText', '<span class="grayText">', '%</span>')
-    course_name = utils.find_page_part(page, r'gridTitle', '<div class="gridTitle">', '</div>').rstrip()
+    page = br.open(get_base_url() + url)
+    soup = BeautifulSoup(page)
+    grade = float(soup.findAll(name='a', attrs={'class':'gridPartOfTermGPA'}, limit=1)[0].span.string[:-2])
+    course_name = soup.findAll(name='div', attrs={'class':'gridTitle'}, limit=1)[0].string
     course_name = string.replace(course_name, '&amp;', '&')
     return Class(course_name, grade)
 
@@ -177,6 +187,7 @@ def get_grades():
     term = get_term(class_links)
     for link in enumerate(class_links[term:]):
         if link[0] % 4 == 0 and link[1] is not None:
+
             grades.append(parse_page(link[1]))
     return grades
 
@@ -196,14 +207,14 @@ def add_to_grades_database(grades):
     the current date.
     """
     for c in grades:
-        if c.name != "":
+        if c.name != '':
             utils.add_to_csv('data.csv', [c.name, c.grade, date])
 
 def get_grade_string(grades):
     """Extracts the grade_string, calculates the diff from
     grade dict and return it
     """
-    final_grade_string = ""
+    final_grade_string = ''
     for c in grades:
         letter_grade = c.get_letter_grade()
         diff = diff_grade(c.grade, c.name)
@@ -215,33 +226,33 @@ def get_grade_string(grades):
 
 def get_weekly_report(grades):
     """Generates the grade string, using a weekly diff"""
-    final_grade_string = ""
+    final_grade_string = ''
     for c in grades:
-        if c.grade != "":
+        if c.grade != '':
             letter_grade = c.get_letter_grade()
             diff = diff_grade_custom(c.grade, c.name, date-timedelta(days=7))
-            if diff != "":
-                final_grade_string += "{} - {}% - {} (weekly diff: %r)\n".format(letter_grade,
+            if diff != '':
+                final_grade_string += '%s - %s%% - %s (weekly diff: %r)\n' % (letter_grade,
                                                                                 c.grade,
                                                                                 c.name,
                                                                                 round(float(diff), 2))
-    if final_grade_string == "":
-        final_grade_string = "*************************\nNo data from one week ago\n*************************\n"
+    if final_grade_string == '':
+        final_grade_string = '*************************\nNo data from one week ago\n*************************\n'
     return final_grade_string
 
 def get_config(section):
     """returns a list of config options in the provided sections
     requires that config is initialized"""
     if not Config:
-        return "Config not found"
+        return 'Config not found'
     dict1 = {}
     for opt in Config.options(section):
         try:
             dict1[opt] = Config.get(section, opt)
             if dict1[opt] == -1:
-                print("skip: %s" % opt)
+                print('skip: %s' % opt)
         except Exception:
-            print("exception on %s!" % opt)
+            print('exception on %s!' % opt)
             dict1[opt] = None
     return dict1
 
@@ -264,7 +275,7 @@ def main():
                     get_config('Email')['username'],
                     get_config('Email')['password'],
                     get_config('Email')['receiving_email'],
-                    "Grades", final_grade_string)
+                    'Grades', final_grade_string)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
