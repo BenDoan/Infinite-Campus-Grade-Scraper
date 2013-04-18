@@ -24,6 +24,8 @@ parser.add_option('-e', '--email', action='store_true', dest='email',
         help='email the grade report to user')
 parser.add_option('-w', '--weekly', action='store_true', dest='weekly',
         help='diffs using the grades from a week ago')
+parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
+        help='outputs more information')
 
 (options, args) = parser.parse_args()
 
@@ -68,6 +70,10 @@ def setup():
 
     # Follows refresh 0 but not hangs on refresh > 0
     br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
+
+
+    if options.verbose:
+        br.set_debug_http(True)
 
     # User-Agent
     br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
