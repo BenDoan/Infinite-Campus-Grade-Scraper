@@ -37,7 +37,7 @@ class course:
 
     def get_letter_grade(self):
         """returns the letter equivalent of the class's grade"""
-        ap = True if bool(get_config('Grades')['use_ap_scaling']) and 'AP' in self.name else False
+        ap = bool(get_config('Grades')['use_ap_scaling']) and 'AP' in self.name
         float_grade = float(self.grade)
         if ap and bool(get_config('Grades')['use_ap_scaling']) and float_grade >= float(get_config('Grades')['a_cutoff']):
             return 'A+'
