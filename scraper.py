@@ -138,7 +138,7 @@ def get_class_links():
     """loops through the links in the schedule page
     and adds the grade page links to the link_list array
     """
-    r = br.open(get_schedule_page_url()) #opens schdule page
+    r = br.open(get_schedule_page_url())
     soup = BeautifulSoup(r)
     table = soup.find('table', cellpadding=2, bgcolor='#A0A0A0')
     link_list = []
@@ -151,8 +151,8 @@ def get_class_links():
 
     return link_list
 
-def string_to_date(string):
-    return datetime.strptime(string, '%m/%d/%y')
+#def string_to_date(string):
+    #return datetime.strptime(string, '%m/%d/%y')
 
 def get_term():
     """returns the current term"""
@@ -165,9 +165,10 @@ def get_term():
         if "(" in term.text:
             count += 1
             date_begin, date_end = utils.between('(', ')', term.text).split('-')
+            string_to_date = lambda string: datetime.strptime(string, '%m/%d/%y')
             if string_to_date(date_begin) <= datetime.now() <= string_to_date(date_end):
                 return count
-    return -1
+    raise StandardError("Couldn't find current term")
 
 def get_num_blocks():
     """returns the number of blocks per day"""
