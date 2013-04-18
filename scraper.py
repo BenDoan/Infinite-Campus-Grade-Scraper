@@ -6,7 +6,7 @@ import mechanize
 import string
 
 from BeautifulSoup import BeautifulSoup
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from optparse import OptionParser
 from xml.dom import minidom
 
@@ -27,7 +27,7 @@ parser.add_option('-w', '--weekly', action='store_true', dest='weekly',
 
 (options, args) = parser.parse_args()
 
-class Class:
+class course:
     """an object for an individual class, contains a grade and class name"""
     grade = 0
     name = ''
@@ -51,6 +51,8 @@ class Class:
             return 'D'
         else:
             return 'F'
+    def __str__():
+        return self.name
 
 def setup():
     """general setup commands"""
@@ -140,7 +142,7 @@ def get_class_links():
     soup = BeautifulSoup(r)
     table = soup.find('table', cellpadding=2, bgcolor='#A0A0A0')
     link_list = []
-    for row in table.findAll('tr')[1:6]:
+    for row in table.findAll('tr')[1:get_num_blocks()+1]:
         for col in row.findAll('td'):
             link = col.find('a')['href']
             if 'mailto' in link:
@@ -149,22 +151,43 @@ def get_class_links():
 
     return link_list
 
-def get_term(class_links):
-    """returns the current term"""
-    term = 0
-    for class_link in enumerate(class_links[0:3]):
-        if class_link[1] is not None:
-            term = class_link[0]
-    return term
+def string_to_date(string):
+    return datetime.strptime(string, '%m/%d/%y')
 
-def parse_page(url):
-    """parses the class page at the provided url and returns a Class object for it"""
-    page = br.open(get_base_url() + url)
+def get_term():
+    """returns the current term"""
+    r = br.open(get_schedule_page_url()) #opens schdule page
+    soup = BeautifulSoup(r)
+    terms = soup.findAll('th', {'class':'scheduleHeader'}, align='center')
+    dates = []
+    count = 0
+    for term in terms:
+        if "(" in term.text:
+            count += 1
+            date_begin, date_end = utils.between('(', ')', term.text).split('-')
+            if string_to_date(date_begin) <= datetime.now() <= string_to_date(date_end):
+                return count
+    return -1
+
+def get_num_blocks():
+    """returns the number of blocks per day"""
+    r = br.open(get_schedule_page_url()) #opens schdule page
+    soup = BeautifulSoup(r)
+    blocks = soup.findAll('th', {'class':'scheduleHeader'}, align='center')
+    count = 0
+    for block in blocks:
+        if "(" not in block.text:
+            count += 1
+    return count
+
+def parse_page(url_part):
+    """parses the class page at the provided url and returns a course object for it"""
+    page = br.open(get_base_url() + url_part)
     soup = BeautifulSoup(page)
     grade = float(soup.findAll(name='a', attrs={'class':'gridPartOfTermGPA'}, limit=1)[0].span.string[:-2])
     course_name = soup.findAll(name='div', attrs={'class':'gridTitle'}, limit=1)[0].string
     course_name = string.replace(course_name, '&amp;', '&')
-    return Class(course_name, grade)
+    return course(course_name, grade)
 
 def get_grades():
     """opens all pages in the link_list array and adds
@@ -173,11 +196,10 @@ def get_grades():
     """
     grades = []
     class_links = get_class_links()
-    term = get_term(class_links)
-    for link in enumerate(class_links[term:]):
-        if link[0] % 4 == 0 and link[1] is not None:
-
-            grades.append(parse_page(link[1]))
+    term = get_term()
+    for num, link in enumerate(class_links):
+        if (num+1) % term == 0 and link is not None:
+            grades.append(parse_page(link))
     return grades
 
 def login():

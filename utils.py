@@ -43,3 +43,13 @@ def url_fix(s, charset='utf-8'):
     path = urllib.quote(path, '/%')
     qs = urllib.quote_plus(qs, ':&=')
     return urlparse.urlunsplit((scheme, netloc, path, qs, anchor))
+
+def between(left,right,s):
+    """searches for text between left and right
+
+    >>> between('tfs', 'gsa', 'tfsaskdfnsdlkfjkldsfjgsa')
+    'askdfnsdlkfjkldsfj'
+    """
+    before,_,a = s.partition(left)
+    a,_,after = a.partition(right)
+    return a
