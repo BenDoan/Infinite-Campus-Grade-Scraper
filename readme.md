@@ -12,7 +12,9 @@ Caveats
 
 Usage: scraper.py [options]
 
+```
 Options:
   -h, --help   show this help message and exit
   -p, --print  prints the grade report to stdout
   -e, --email  email the grade report to user
+```
