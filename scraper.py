@@ -159,7 +159,6 @@ def get_term():
     r = br.open(get_schedule_page_url()) #opens schdule page
     soup = BeautifulSoup(r)
     terms = soup.findAll('th', {'class':'scheduleHeader'}, align='center')
-    dates = []
     count = 0
     for term in terms:
         if "(" in term.text:
@@ -219,8 +218,7 @@ def add_to_grades_database(grades):
     the current date.
     """
     for c in grades:
-        if c.name != '':
-            utils.add_to_csv('data.csv', [c.name, c.grade, date])
+        utils.add_to_csv('data.csv', [c.name, c.grade, date])
 
 def get_grade_string(grades):
     """Extracts the grade_string, calculates the diff from
@@ -230,7 +228,10 @@ def get_grade_string(grades):
     for c in grades:
         letter_grade = c.get_letter_grade()
         diff = diff_grade(c.grade, c.name)
-        diff = "+" + str(round(float(diff), 2)) if diff > 0 else diff
+        if diff > 0:
+            diff = "+" + str(round(float(diff), 2))
+        else:
+            diff = round(float(diff), 2)
         final_grade_string += "{} - {}% - {} (diff: {}%)\n".format(letter_grade,
                                                                 c.grade,
                                                                 c.name,
@@ -241,14 +242,13 @@ def get_weekly_report(grades):
     """Generates the grade string, using a weekly diff"""
     final_grade_string = ''
     for c in grades:
-        if c.grade != '':
-            letter_grade = c.get_letter_grade()
-            diff = diff_grade_custom(c.grade, c.name, date-timedelta(days=7))
-            if diff != '':
-                final_grade_string += '%s - %s%% - %s (weekly diff: %r)\n' % (letter_grade,
-                                                                                c.grade,
-                                                                                c.name,
-                                                                                round(float(diff), 2))
+        letter_grade = c.get_letter_grade()
+        diff = diff_grade_custom(c.grade, c.name, date-timedelta(days=7))
+        if diff != '':
+            final_grade_string += '%s - %s%% - %s (weekly diff: %r)\n' % (letter_grade,
+                                                                            c.grade,
+                                                                            c.name,
+                                                                            round(float(diff), 2))
     if final_grade_string == '':
         final_grade_string = '*************************\nNo data from one week ago\n*************************\n'
     return final_grade_string
