@@ -53,6 +53,7 @@ class course:
             return 'D'
         else:
             return 'F'
+
     def __str__():
         return self.name
 
@@ -71,7 +72,6 @@ def setup():
     # Follows refresh 0 but not hangs on refresh > 0
     br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
 
-
     if options.verbose:
         br.set_debug_http(True)
 
@@ -81,29 +81,26 @@ def setup():
 def diff_grade_custom(grade, class_name, date):
     """returns the difference between the current class grade and the grade from the provided date"""
     diff = ''
-    for line in utils.read_csv('data.csv')[::-1]:
+    for line in reversed(utils.read_csv('data.csv')):
         if line[0] == class_name and line[2] == str(date):
             diff = float(line[1]) - float(grade)
-            if diff > 0:
+            if diff < 0:
                 return '+' + str(diff)
             else:
                 return diff
     return diff
 
-def diff_grade(grade, class_name):
+def diff_grade(diff_grade, class_name):
     """returns the difference between the current class grade
     and the last one
     """
     diff = ''
     got_first = False #we need to skip the grade we just added to the database
-    for line in utils.read_csv('data.csv')[::-1]:
-        if line[0] == class_name:
+    for name, grade, date in reversed(utils.read_csv('data.csv')):
+        if name == class_name:
             if got_first:
-                diff = float(line[1]) - float(grade)
-                if diff > 0:
-                    return "+" + str(diff)
-                else:
-                    return diff
+                diff = float(diff_grade) - float(grade)
+                return diff
             else:
                 got_first = True
     return 0.0
@@ -156,9 +153,6 @@ def get_class_links():
             link_list.append(link)
 
     return link_list
-
-#def string_to_date(string):
-    #return datetime.strptime(string, '%m/%d/%y')
 
 def get_term():
     """returns the current term"""
@@ -236,10 +230,11 @@ def get_grade_string(grades):
     for c in grades:
         letter_grade = c.get_letter_grade()
         diff = diff_grade(c.grade, c.name)
+        diff = "+" + str(round(float(diff), 2)) if diff > 0 else diff
         final_grade_string += "{} - {}% - {} (diff: {}%)\n".format(letter_grade,
                                                                 c.grade,
                                                                 c.name,
-                                                                round(float(diff), 2))
+                                                                diff)
     return final_grade_string
 
 def get_weekly_report(grades):
@@ -280,20 +275,21 @@ def main():
     grades = get_grades()
     add_to_grades_database(grades)
 
-    if options is not None:
+    if options:
         if options.weekly:
             final_grade_string = get_weekly_report(grades)
         else:
             final_grade_string = get_grade_string(grades)
 
         if options.print_results:
-            print final_grade_string
+            print final_grade_string, #comma removes newline
         if options.email:
             utils.send_email(get_config('Email')['smtp_address'],
                     get_config('Email')['username'],
                     get_config('Email')['password'],
                     get_config('Email')['receiving_email'],
-                    'Grades', final_grade_string)
+                    'Grades',
+                    final_grade_string)
 
 if __name__ == '__main__':
     main()
