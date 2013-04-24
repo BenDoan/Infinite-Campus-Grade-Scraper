@@ -30,6 +30,8 @@ parser.add_option('-e', '--email', action='store_true', dest='email',
         help='email the grade report to user')
 parser.add_option('-w', '--weekly', action='store_true', dest='weekly',
         help='diffs using the grades from a week ago')
+parser.add_option('-n', '--no-log', action='store_true', dest='nolog',
+        help='does not log grades in grades database')
 parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
         help='outputs more information')
 
@@ -279,9 +281,11 @@ def main():
     setup()
     login()
     grades = get_grades()
-    add_to_grades_database(grades)
 
     if options:
+        if not options.nolog:
+            add_to_grades_database(grades)
+
         if options.weekly:
             final_grade_string = get_weekly_report(grades)
         else:

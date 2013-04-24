@@ -15,10 +15,14 @@ USAGE
 ```
 Usage: scraper.py [options]
 
+A script to scrape grades from an infinite campus website
+
 Options:
   -h, --help     show this help message and exit
   -p, --print    prints the grade report to stdout
   -e, --email    email the grade report to user
+  -w, --weekly   diffs using the grades from a week ago
+  -n, --no-log   does not log grades in grades database
   -v, --verbose  outputs more information
 ```
 
