@@ -1,9 +1,10 @@
 from cx_Freeze import setup, Executable
 
-build_exe_options = {"packages" : [], "include_files" : ['config.ini', 'readme.md']}
+includes = ['encodings.latin_1', 'encodings.utf_8', 'encodings.idna', 'encodings.ascii']
 setup(
         name = "Infinite Campus Grade Scraper",
         version = "1.0",
-        options = {'build_exe' : build_exe_options},
+        author = "Ben doan",
+        options = {'build_exe' : {'includes' : includes}},
         executables = [Executable("scraper.py")]
 )
