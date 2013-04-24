@@ -3,7 +3,9 @@
 import ConfigParser
 import cookielib
 import mechanize
+import os
 import string
+import sys
 
 from BeautifulSoup import BeautifulSoup
 from datetime import date, timedelta, datetime
@@ -14,8 +16,12 @@ import utils
 
 br = mechanize.Browser()
 date = date.today()
+
+appdir = os.path.dirname(sys.argv[0])
+config_file_name = os.path.join(appdir, ".", "config.ini")
+
 Config = ConfigParser.ConfigParser()
-Config.read('config.ini')
+Config.read(config_file_name)
 
 parser = OptionParser(description='A script to scrape grades from an infinite campus website')
 parser.add_option('-p', '--print', action='store_true', dest='print_results',

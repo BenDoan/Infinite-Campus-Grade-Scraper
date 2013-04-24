@@ -2,3 +2,5 @@ config.ini
 data.csv
 
 *.pyc
+
+build
