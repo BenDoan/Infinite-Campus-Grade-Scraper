@@ -6,7 +6,6 @@ import mechanize
 import os
 import string
 import sys
-import threading
 
 from BeautifulSoup import BeautifulSoup
 from datetime import date, timedelta, datetime
@@ -18,13 +17,13 @@ import utils
 br = mechanize.Browser()
 date = date.today()
 
-appdir = os.path.dirname(sys.argv[0])
-config_file_name = os.path.join(appdir, ".", "config.ini")
+APPDIR = os.path.dirname(sys.argv[0])
+CONFIG_FILE_NAME = os.path.join(APPDIR, ".", "config.ini")
 
 Config = ConfigParser.ConfigParser()
-Config.read(config_file_name)
+Config.read(CONFIG_FILE_NAME)
 
-parser = OptionParser(description='A script to scrape grades from an infinite campus website')
+parser = OptionParser(description='Scrapes grades from an infinite campus website')
 parser.add_option('-p', '--print', action='store_true', dest='print_results',
         help='prints the grade report to stdout')
 parser.add_option('-e', '--email', action='store_true', dest='email',
@@ -40,28 +39,59 @@ parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
 
 class course:
     """an object for an individual class, contains a grade and class name"""
-    grade = 0
-    name = ''
     def __init__(self, name, grade):
         self.grade = grade
         self.name = name
+        self.diff = self.diff_grade(grade, name)
 
     def get_letter_grade(self):
         """returns the letter equivalent of the class's grade"""
         ap = bool(get_config('Grades')['use_ap_scaling']) and 'AP' in self.name
-        float_grade = float(self.grade)
-        if ap and bool(get_config('Grades')['use_ap_scaling']) and float_grade >= float(get_config('Grades')['a_cutoff']):
+        meets_cutoff = lambda x: self.grade >= float(get_config('Grades')[x + '_cutoff'])
+
+        if ap and meets_cutoff('a'):
             return 'A+'
-        elif (ap and float_grade >= float(get_config('Grades')['b_cutoff'])) or float_grade >= float(get_config('Grades')['a_cutoff']):
+        elif (ap and meets_cutoff('b')) or meets_cutoff('a'):
             return 'A'
-        elif (ap and float_grade >= float(get_config('Grades')['c_cutoff'])) or float_grade >= float(get_config('Grades')['b_cutoff']):
+        elif (ap and meets_cutoff('c')) or meets_cutoff('b'):
             return 'B'
-        elif float_grade >= float(get_config('Grades')['c_cutoff']):
+        elif meets_cutoff('c'):
             return 'C'
-        elif float_grade >= float(get_config('Grades')['d_cutoff']):
+        elif meets_cutoff('d'):
             return 'D'
         else:
             return 'F'
+
+    def diff_grade_weekly(self):
+        return self.diff_grade_custom(self.grade, self.name, date-timedelta(days=7))
+
+    def diff_grade_custom(self, comp_grade, class_name, comp_date):
+        """returns the difference between the current class grade and the grade from the provided
+        timedelta
+        """
+        diff = ''
+        for entry in reversed(utils.read_csv('data.csv')):
+            if entry[0] == class_name and entry[2] == str(comp_date):
+                diff = float(entry[1]) - float(comp_grade)
+                if diff < 0:
+                    return '+' + str(diff)
+                else:
+                    return diff
+        return 0.0
+
+    def diff_grade(self, diff_grade, class_name):
+        """returns the difference between the current class grade
+        and the last one
+        """
+        diff = ''
+        got_first = False #we need to skip the grade we just added to the database
+        for name, grade, date in reversed(utils.read_csv('data.csv')):
+            if name == class_name:
+                if got_first:
+                    return float(grade) - float(diff_grade)
+                else:
+                    got_first = True
+        return 0.0
 
     def __str__():
         return self.name
@@ -87,32 +117,6 @@ def setup():
     # User-Agent
     br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
 
-def diff_grade_custom(grade, class_name, date):
-    """returns the difference between the current class grade and the grade from the provided date"""
-    diff = ''
-    for line in reversed(utils.read_csv('data.csv')):
-        if line[0] == class_name and line[2] == str(date):
-            diff = float(line[1]) - float(grade)
-            if diff < 0:
-                return '+' + str(diff)
-            else:
-                return diff
-    return diff
-
-def diff_grade(diff_grade, class_name):
-    """returns the difference between the current class grade
-    and the last one
-    """
-    diff = ''
-    got_first = False #we need to skip the grade we just added to the database
-    for name, grade, date in reversed(utils.read_csv('data.csv')):
-        if name == class_name:
-            if got_first:
-                diff = float(diff_grade) - float(grade)
-                return diff
-            else:
-                got_first = True
-    return 0.0
 
 def get_base_url():
     """returns the site's base url, taken from the login page url"""
@@ -227,7 +231,7 @@ def add_to_grades_database(grades):
     the current date.
     """
     for c in grades:
-        utils.add_to_csv('data.csv', [c.name, c.grade, date])
+        utils.add_to_csv('data.csv', [c.name, c.grade, date.today()])
 
 def get_grade_string(grades):
     """Extracts the grade_string, calculates the diff from
@@ -236,7 +240,7 @@ def get_grade_string(grades):
     final_grade_string = ''
     for c in grades:
         letter_grade = c.get_letter_grade()
-        diff = diff_grade(c.grade, c.name)
+        diff = c.diff
         if diff > 0:
             diff = "+" + str(round(float(diff), 2))
         else:
@@ -252,12 +256,16 @@ def get_weekly_report(grades):
     final_grade_string = ''
     for c in grades:
         letter_grade = c.get_letter_grade()
-        diff = diff_grade_custom(c.grade, c.name, date-timedelta(days=7))
+        diff = c.diff_grade_weekly()
+        if diff > 0:
+            diff = "+" + str(round(float(diff), 2))
+        else:
+            diff = round(float(diff), 2)
         if diff != '':
-            final_grade_string += '%s - %s%% - %s (weekly diff: %r)\n' % (letter_grade,
+            final_grade_string += '{} - {}% - {} (weekly diff: {}%)\n'.format(letter_grade,
                                                                             c.grade,
                                                                             c.name,
-                                                                            round(float(diff), 2))
+                                                                            diff)
     if final_grade_string == '':
         final_grade_string = '*************************\nNo data from one week ago\n*************************\n'
     return final_grade_string
@@ -283,24 +291,23 @@ def main():
     login()
     grades = get_grades()
 
-    if options:
-        if not options.nolog:
-            add_to_grades_database(grades)
+    if not options.nolog:
+        add_to_grades_database(grades)
 
-        if options.weekly:
-            final_grade_string = get_weekly_report(grades)
-        else:
-            final_grade_string = get_grade_string(grades)
+    if options.weekly:
+        final_grade_string = get_weekly_report(grades)
+    else:
+        final_grade_string = get_grade_string(grades)
 
-        if options.print_results:
-            print final_grade_string, #comma removes newline
-        if options.email:
-            utils.send_email(get_config('Email')['smtp_address'],
-                    get_config('Email')['username'],
-                    get_config('Email')['password'],
-                    get_config('Email')['receiving_email'],
-                    'Grades',
-                    final_grade_string)
+    if options.print_results:
+        print final_grade_string, #comma removes newline
+    if options.email:
+        utils.send_email(get_config('Email')['smtp_address'],
+                get_config('Email')['username'],
+                get_config('Email')['password'],
+                get_config('Email')['receiving_email'],
+                'Grades',
+                final_grade_string)
 
 if __name__ == '__main__':
     main()
