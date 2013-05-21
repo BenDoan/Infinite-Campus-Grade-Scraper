@@ -34,6 +34,8 @@ parser.add_option('-n', '--no-log', action='store_true', dest='nolog',
         help='does not log grades in grades database')
 parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
         help='outputs more information')
+parser.add_option('-d', '--diff', action='store_true', dest='diff',
+        help='only returns classes with grades that have changed')
 
 (options, args) = parser.parse_args()
 
@@ -245,7 +247,8 @@ def get_grade_string(grades):
             diff = "+" + str(round(float(diff), 2))
         else:
             diff = round(float(diff), 2)
-        final_grade_string += "{} - {}% - {} (diff: {}%)\n".format(letter_grade,
+        if not options.diff or options.diff and diff != 0.0:
+            final_grade_string += "{} - {}% - {} (diff: {}%)\n".format(letter_grade,
                                                                 c.grade,
                                                                 c.name,
                                                                 diff)
@@ -262,7 +265,8 @@ def get_weekly_report(grades):
         else:
             diff = round(float(diff), 2)
         if diff != '':
-            final_grade_string += '{} - {}% - {} (weekly diff: {}%)\n'.format(letter_grade,
+            if not options.diff or options.diff and diff != 0.0:
+                final_grade_string += '{} - {}% - {} (weekly diff: {}%)\n'.format(letter_grade,
                                                                             c.grade,
                                                                             c.name,
                                                                             diff)
