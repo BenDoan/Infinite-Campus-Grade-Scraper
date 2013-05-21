@@ -86,13 +86,9 @@ class course:
         and the last one
         """
         diff = ''
-        got_first = False #we need to skip the grade we just added to the database
         for name, grade, date in reversed(utils.read_csv('data.csv')):
             if name == class_name:
-                if got_first:
-                    return float(grade) - float(diff_grade)
-                else:
-                    got_first = True
+                return float(grade) - float(diff_grade)
         return 0.0
 
     def __str__():
