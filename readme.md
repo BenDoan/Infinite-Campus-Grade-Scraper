@@ -45,3 +45,4 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ```
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/85801c5ac5139385cd30d09836e2e90f "githalytics.com")](http://githalytics.com/BenDoan/Infinite-Campus-Grade-Scraper)
